@@ -13,7 +13,7 @@
 	SystemCall proc
 		mov r10, rcx			; move parameters to r10 register
 		mov eax, [r15]			; eax = pSyscall->SSN
-		jmp qword ptr [r15 + 8] ; jump to syscall address @ pSyscall->JumpAddress
+		jmp qword ptr [r15 + 8]	; jump to syscall address @ pSyscall->JumpAddress
 		xor r15, r15
 		ret
 	SystemCall endp
