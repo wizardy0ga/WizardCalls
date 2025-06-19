@@ -9,20 +9,31 @@
 # pragma once
 # include <Windows.h>
 
+/* ------------------ Control Macros ------------------ */
+# define GLOBAL
+
 /* ---------------------- Macros ---------------------- */
 
-# ifdef GLOBAL
-# define WzDInit() SYSCALL_LIST_NAME = InitializeSystemCalls() 
-# endif
-
-# ifndef GLOBAL
-# define WzDInit() PSYSCALL_LIST SYSCALL_LIST_NAME = InitializeSystemCalls()
-# endif
-
+// Values
 # define SYSCALL_LIST_NAME	pSyscallList
 # define NT_SUCCESS		    0x0
 
-/* ----------------- Function Macros ------------------ */
+
+// Functions
+# ifdef GLOBAL
+# define WzDInit() SYSCALL_LIST_NAME = InitializeSystemCalls()
+
+# define WzDAllocateVirtualMemory( ... )	NtAllocateVirtualMemory( ##__VA_ARGS__ )
+# define WzDProtectVirtualMemory( ... )		NtProtectVirtualMemory( ##__VA_ARGS__ )
+# define WzDWriteVirtualMemory( ... )		NtWriteVirtualMemory( ##__VA_ARGS__ )
+# define WzDFreeVirtualMemory( ... )		NtFreeVirtualMemory( ##__VA_ARGS__ )
+# define WzDCreateThread( ... )				NtCreateThreadEx( ##__VA_ARGS__ )
+# define WzDWaitForSingleObject( ... )		NtWaitForSingleObject( ##__VA_ARGS__ )
+# endif
+
+
+# ifndef GLOBAL
+# define WzDInit() PSYSCALL_LIST SYSCALL_LIST_NAME = InitializeSystemCalls()
 
 # define WzDAllocateVirtualMemory( ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection )\
 	NtAllocateVirtualMemory( SYSCALL_LIST_NAME, ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection )
@@ -41,6 +52,8 @@
 
 # define WzDWaitForSingleObject(Handle, Alertable, Timeout) \
 	NtWaitForSingleObject( SYSCALL_LIST_NAME, Handle, Alertable, Timeout )
+
+# endif
 
 /* -------------------- Structures -------------------- */
 
@@ -80,9 +93,20 @@ extern PSYSCALL_LIST SYSCALL_LIST_NAME;
 */
 PSYSCALL_LIST InitializeSystemCalls();
 
+# ifdef GLOBAL
+NTSTATUS NtProtectVirtualMemory  ( HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection );
+NTSTATUS NtWriteVirtualMemory    ( HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit );
+NTSTATUS NtAllocateVirtualMemory ( HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection );
+NTSTATUS NtWaitForSingleObject   ( HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout );
+NTSTATUS NtCreateThreadEx		 ( PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList );
+NTSTATUS NtFreeVirtualMemory	 ( HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis );
+# endif
+
+# ifndef GLOBAL
 NTSTATUS NtProtectVirtualMemory  ( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection );
 NTSTATUS NtWriteVirtualMemory    ( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit );
 NTSTATUS NtAllocateVirtualMemory ( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection );
-NTSTATUS NtWaitForSingleObject   ( PSYSCALL_LIST pSyscallList, HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout );
-NTSTATUS NtCreateThreadEx		 ( PSYSCALL_LIST pSyscallList, PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList );
-NTSTATUS NtFreeVirtualMemory	 ( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis );
+NTSTATUS NtWaitForSingleObject   ( PSYSCALL_LIST pSyscalls, HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout );
+NTSTATUS NtCreateThreadEx		 ( PSYSCALL_LIST pSyscalls, PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList );
+NTSTATUS NtFreeVirtualMemory	 ( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis );
+# endif
