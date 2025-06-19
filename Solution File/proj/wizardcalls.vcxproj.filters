@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\source\main.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\source\wizardcalls.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="..\src\source\wizardcalls.global.x64.asm">
+      <Filter>Source</Filter>
+    </MASM>
+    <MASM Include="..\src\source\wizardcalls.x64.asm">
+      <Filter>Source</Filter>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Include">
+      <UniqueIdentifier>{7125e224-7aca-4965-8c75-5f46a37de0d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{dad476ef-d0b6-4e20-a629-45f9199be300}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\include\wizardcalls.h">
+      <Filter>Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

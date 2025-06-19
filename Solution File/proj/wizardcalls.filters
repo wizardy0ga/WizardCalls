@@ -11,17 +11,23 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\Include\wizardcalls.h">
+    <ClInclude Include="..\src\include\wizardcalls.h">
       <Filter>Include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Source\main.c">
+    <ClCompile Include="..\src\source\wizardcalls.c">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\source\main.c">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="..\Source\wizardcalls.x64.asm">
+    <MASM Include="..\src\source\wizardcalls.global.x64.asm">
+      <Filter>Source</Filter>
+    </MASM>
+    <MASM Include="..\src\source\wizardcalls.x64.asm">
       <Filter>Source</Filter>
     </MASM>
   </ItemGroup>

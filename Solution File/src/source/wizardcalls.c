@@ -6,12 +6,12 @@
 		https://github.com/Maldev-Academy/HellHall
 		https://github.com/trickster0/TartarusGate
 */
-# pragma once
 # include <windows.h>
-
+# include "../include/wizardcalls.h"
 
 /* ------------------ Control Macros ------------------ */
 
+# define GLOBAL
 # define RANDOMIZE_JUMP_ADDRESS
 # define wc_DEBUG
 
@@ -19,69 +19,80 @@
 
 // Misc
 # define wc_HASH_SEED		7627
-# define SYSCALL_LIST_NAME	pSyscallList
-# define NT_SUCCESS			0x0
+# define UP					-32
+# define DOWN				32
+# define SYSCALL_STUB_SIZE	32
 
 // Dlls
 # define wc_NTDLL					0x45FB4B09
 
 // Functions
-#define wc_NTALLOCATEVIRTUALMEMORY	0xEDEBBBFE
-#define wc_NTFREEVIRTUALMEMORY		0x215B656F
-#define wc_NTWRITEVIRTUALMEMORY		0x9EA23BFE
-#define wc_NTCREATETHREADEX			0x9AE1FB4A
-#define wc_NTWAITFORSINGLEOBJECT	0xA41B21EA
+# define wc_NTALLOCATEVIRTUALMEMORY	0xEDEBBBFE
+# define wc_NTFREEVIRTUALMEMORY		0x215B656F
+# define wc_NTWRITEVIRTUALMEMORY	0x9EA23BFE
+# define wc_NTCREATETHREADEX		0x9AE1FB4A
+# define wc_NTWAITFORSINGLEOBJECT	0xA41B21EA
+# define wc_NTPROTECTVIRTUALMEMORY	0xA74F59AE
 
-#define wc_HASHES wc_NTALLOCATEVIRTUALMEMORY,wc_NTFREEVIRTUALMEMORY,wc_NTWRITEVIRTUALMEMORY,wc_NTCREATETHREADEX,wc_NTWAITFORSINGLEOBJECT
-
+// Hash list. This is important. Hashes must be defined in order the order they are defined in syscall list. This allows hashes to be resolved to appropriate syscall
+// structure in parallel.
+# define wc_HASHES wc_NTALLOCATEVIRTUALMEMORY, wc_NTFREEVIRTUALMEMORY, wc_NTWRITEVIRTUALMEMORY, wc_NTPROTECTVIRTUALMEMORY, wc_NTCREATETHREADEX, wc_NTWAITFORSINGLEOBJECT
 
 // x64 op codes
-#define RET					0xC3
-#define JNE					0x75
-#define MOV					0x4C
-#define MOV2				0xB8
-#define R10					0x8B
-#define RCX					0xD1
-#define JMP					0xE9
-#define NULL_BYTE			0x00
+# define RET		0xC3
+# define JNE		0x75
+# define MOV		0x4C
+# define MOV2		0xB8
+# define R10		0x8B
+# define RCX		0xD1
+# define JMP		0xE9
+# define NULL_BYTE	0x00
 
-// Offsets
+// Offsetts
 # define SYSCALL_OFFSET		18
 # define JNE_INT2E_OFFSET	3
-# define UP				   -32
-# define DOWN				32
-# define SYSCALL_STUB_SIZE	32
 
-
-/* ----------------- Function Macros ------------------ */
-
+/* ------------------ Function Macros ----------------- */
 # ifdef wc_DEBUG
 # include <stdio.h>
-# define wc_dbg( msg, ... )		printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
+# define wc_dbg( msg, ... )        printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
 # endif
 
 # ifndef wc_DEBUG
-# define wc_dbg( msg, ... )		do {} while (0)
+# define wc_dbg( msg, ... )        do {} while (0)
 # endif
 
-# define WzDInit()				PSYSCALL_LIST SYSCALL_LIST_NAME = InitializeSystemCalls();
 # define HashStringA( String )	HashStringSdbmA( String )
 # define HashStringW( String )	HashStringSdbmW( String )
 
-# define WzDAllocateVirtualMemory( ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection ) \
-	NtAllocateVirtualMemory( SYSCALL_LIST_NAME, ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection )
+/* ---------------------- Globals --------------------- */
 
-# define WzDWriteVirtualMemory( ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit ) \
-	NtWriteVirtualMemory( SYSCALL_LIST_NAME, ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit )
+# ifdef GLOBAL
+PSYSCALL_LIST SYSCALL_LIST_NAME;
+# endif
 
-# define WzDFreeVirtualMemory( ProcessHandle, BaseAddress, RegionSize, FreeTypeThis ) \
-	NtFreeVirtualMemory( SYSCALL_LIST_NAME, ProcessHandle, BaseAddress, RegionSize, FreeTypeThis )
+/* --------------------- Externals -------------------- */
 
-# define WzDCreateThread( ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList ) \
-	NtCreateThreadEx( SYSCALL_LIST_NAME, ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList )
+/*
+    @brief
+        Sets RBX to syscall structure pointer
 
-# define WzDWaitForSingleObject(Handle, Alertable, Timeout) \
-	NtWaitForSingleObject( SYSCALL_LIST_NAME, Handle, Alertable, Timeout )
+    @param[in]    PSYSCALL pSyscall
+        A pointer to a syscall structure
+
+    @return
+        None
+*/
+extern VOID SetSyscallPointer( PSYSCALL pSyscall );
+
+/*
+    @brief
+        Executes a system call
+
+    @return
+        The status of the system call as NTSTATUS
+*/
+extern NTSTATUS SystemCall();
 
 /* -------------------- Prototypes -------------------- */
 
@@ -91,122 +102,94 @@ typedef ( NTAPI* fpWzDAllocate ) ( HANDLE ProcessHandle, PVOID * BaseAddress, UL
 
 typedef struct _CLIENT_ID_
 {
-	HANDLE UniqueProcess;
-	HANDLE UniqueThread;
-} CLIENT_ID, * PCLIENT_ID;
+    HANDLE UniqueProcess;
+    HANDLE UniqueThread;
+}
+CLIENT_ID, * PCLIENT_ID;
 
 typedef struct _UNICODE_STRING_
 {
-	USHORT Length;
-	USHORT MaximumLength;
-	_Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;
-} UNICODE_STRING_, * PUNICODE_STRING_;
+    USHORT Length;
+    USHORT MaximumLength;
+    _Field_size_bytes_part_opt_(MaximumLength, Length) PWCH Buffer;
+}
+UNICODE_STRING_, * PUNICODE_STRING_;
 
 typedef struct _LOADER_DATA_TABLE_ENTRY
 {
-	LIST_ENTRY InLoadOrderLinks;
-	LIST_ENTRY InMemoryOrderLinks;
-	LIST_ENTRY InInitializationOrderLinks;
-	PVOID DllBase;
-	PVOID EntryPoint;
-	ULONG SizeOfImage;
-	UNICODE_STRING_ FullDllName;
-	UNICODE_STRING_ BaseDllName;
-} LOADER_DATA_TABLE_ENTRY, * PLOADER_DATA_TABLE_ENTRY;
+    LIST_ENTRY		InLoadOrderLinks;
+    LIST_ENTRY		InMemoryOrderLinks;
+    LIST_ENTRY		InInitializationOrderLinks;
+    PVOID			DllBase;
+    PVOID			EntryPoint;
+    ULONG			SizeOfImage;
+    UNICODE_STRING_	FullDllName;
+    UNICODE_STRING_ BaseDllName;
+}
+LOADER_DATA_TABLE_ENTRY, * PLOADER_DATA_TABLE_ENTRY;
 
 typedef struct _PEB_LOADER_DATA
 {
-	ULONG Length;
-	BOOLEAN Initialized;
-	HANDLE SsHandle;
-	LIST_ENTRY InLoadOrderModuleList;
-	LIST_ENTRY InMemoryOrderModuleList;
-	LIST_ENTRY InInitializationOrderModuleList;
-	PVOID EntryInProgress;
-	BOOLEAN ShutdownInProgress;
-	HANDLE ShutdownThreadId;
-} PEB_LOADER_DATA, * PPEB_LOADER_DATA;
+    ULONG		Length;
+    BOOLEAN		Initialized;
+    HANDLE		SsHandle;
+    LIST_ENTRY	InLoadOrderModuleList;
+    LIST_ENTRY	InMemoryOrderModuleList;
+    LIST_ENTRY	InInitializationOrderModuleList;
+    PVOID		EntryInProgress;
+    BOOLEAN		ShutdownInProgress;
+    HANDLE		ShutdownThreadId;
+} 
+PEB_LOADER_DATA, * PPEB_LOADER_DATA;
 
 typedef struct _CURDIR
 {
-	UNICODE_STRING_ DosPath;
-	HANDLE Handle;
-} CURDIR, * PCURDIR;
+    UNICODE_STRING_ DosPath;
+    HANDLE			Handle;
+}
+CURDIR, * PCURDIR;
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
-	ULONG MaximumLength;
-	ULONG Length;
-	ULONG Flags;
-	ULONG DebugFlags;
-	HANDLE ConsoleHandle;
-	ULONG ConsoleFlags;
-	HANDLE StandardInput;
-	HANDLE StandardOutput;
-	HANDLE StandardError;
-	CURDIR CurrentDirectory;
-	UNICODE_STRING_ DllPath;
-	UNICODE_STRING_ ImagePathName;
-	UNICODE_STRING_ CommandLine;
-	PVOID Environment;
-} RTL_USER_PROCESS_PARAMETERS, * PRTL_USER_PROCESS_PARAMETERS;
+    ULONG			MaximumLength;
+    ULONG			Length;
+    ULONG			Flags;
+    ULONG			DebugFlags;
+    HANDLE			ConsoleHandle;
+    ULONG			ConsoleFlags;
+    HANDLE			StandardInput;
+    HANDLE			StandardOutput;
+    HANDLE			StandardError;
+    CURDIR			CurrentDirectory;
+    UNICODE_STRING_ DllPath;
+    UNICODE_STRING_ ImagePathName;
+    UNICODE_STRING_ CommandLine;
+    PVOID			Environment;
+} 
+RTL_USER_PROCESS_PARAMETERS, * PRTL_USER_PROCESS_PARAMETERS;
 
 typedef struct _PROC_ENV_BLOCK
 {
-	BOOLEAN InheritedAddressSpace;
-	BOOLEAN ReadImageFileExecOptions;
-	BOOLEAN BeingDebugged;
-	HANDLE Mutant;
-	PVOID ImageBaseAddress;
-	PPEB_LOADER_DATA Ldr;
-	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
-} PROC_ENV_BLOCK, * PPROC_ENV_BLOCK;
+    BOOLEAN							InheritedAddressSpace;
+    BOOLEAN							ReadImageFileExecOptions;
+    BOOLEAN							BeingDebugged;
+    HANDLE							Mutant;
+    PVOID							ImageBaseAddress;
+    PPEB_LOADER_DATA				Ldr;
+    PRTL_USER_PROCESS_PARAMETERS	ProcessParameters;
+} 
+PROC_ENV_BLOCK, * PPROC_ENV_BLOCK;
 
-typedef struct _TEB_ {
-	NT_TIB ThreadInformationBlock;
-	PPROC_ENV_BLOCK  ProcessEnvironmentBlock;
-	CLIENT_ID ClientId;
-} THREAD_ENV_BLOCK, *PTHREAD_ENV_BLOCK;
-
-typedef struct _SYSCALL_ 
+typedef struct _TEB_ 
 {
-	DWORD SSN;
-	PVOID JumpAddress;
-} SYSCALL, *PSYSCALL;
+    NT_TIB				ThreadInformationBlock;
+    PPROC_ENV_BLOCK		ProcessEnvironmentBlock;
+    CLIENT_ID			ClientId;
+} 
+THREAD_ENV_BLOCK, *PTHREAD_ENV_BLOCK;
 
-typedef struct _SYSCALL_LIST_ 
-{
-	SYSCALL NtAllocateVirtualMemory;
-	SYSCALL NtFreeVirtualMemory;
-	SYSCALL NtWriteVirtualMemory;
-	SYSCALL NtCreateThreadEx;
-	SYSCALL NtWaitForSingleObject;
-} SYSCALL_LIST, *PSYSCALL_LIST;
 
 /* -------------------- Functions --------------------- */
-
-/*
-	@brief
-		Sets RBX to syscall structure pointer
-
-	@param[in]	PSYSCALL pSyscall
-		A pointer to a syscall structure
-
-	@return
-		None
-*/
-extern VOID SetSyscallPointer( PSYSCALL pSyscall );
-
-
-/*
-	@brief
-		Executes a system call
-
-	@return
-		The status of the system call as NTSTATUS
-*/
-extern NTSTATUS SystemCall();
-
 
 /*
 	@brief
@@ -218,7 +201,7 @@ extern NTSTATUS SystemCall();
 	@return
 		Returns a random number as int
 */
-int _rand( int seed )
+static int _rand( int seed )
 {
 	unsigned int a = 1664525;
 	unsigned int c = 1013904223;
@@ -238,7 +221,7 @@ int _rand( int seed )
 	@return
 		A hash of the input string as a DWORD
 */
-DWORD HashStringSdbmW( _In_ LPCWSTR String )
+static DWORD HashStringSdbmW( _In_ LPCWSTR String )
 {
 	ULONG Hash = wc_HASH_SEED;
 	INT c;
@@ -260,7 +243,7 @@ DWORD HashStringSdbmW( _In_ LPCWSTR String )
 	@return
 		A hash of the input string as a DWORD
 */
-DWORD HashStringSdbmA(_In_ LPCSTR String)
+static DWORD HashStringSdbmA(_In_ LPCSTR String)
 {
 	ULONG Hash = wc_HASH_SEED;
 	INT c;
@@ -285,7 +268,7 @@ DWORD HashStringSdbmA(_In_ LPCSTR String)
 	@return
 		None
 */
-VOID ZeroMem(PVOID pMemory, SIZE_T Size)
+static VOID ZeroMem(PVOID pMemory, SIZE_T Size)
 {
 	PBYTE  pBase;
 
@@ -313,7 +296,7 @@ VOID ZeroMem(PVOID pMemory, SIZE_T Size)
 	@return
 		A handle to the module if found otherwise NULL
 */
-HMODULE GetPebModuleByHash( DWORD Hash ) 
+static HMODULE GetPebModuleByHash( DWORD Hash ) 
 {
 
 	WCHAR						ModuleName[ MAX_PATH ];
@@ -383,7 +366,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 	PBYTE						pFuncAddr;
 	NTSTATUS					Status;
 	fpWzDAllocate				WzDAllocate = 0;
-	DWORD						Hashes[ sizeof( wc_HASHES ) + 1 ] = { wc_HASHES };
+	DWORD						Hashes[ sizeof( wc_HASHES ) * sizeof( wc_HASHES ) ] = { wc_HASHES };
 	SIZE_T						SyscallListSize = sizeof(SYSCALL_LIST);
 
 	wc_dbg( "Initializing system calls..." );
@@ -401,7 +384,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 	}
 
 	/* Get export directory, function names, addresses & ordinals */
-	pExportDirectory	= ( PIMAGE_EXPORT_DIRECTORY ) ( DllBase + pNtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress );
+	pExportDirectory	= ( PIMAGE_EXPORT_DIRECTORY ) ( DllBase + pNtHeaders->OptionalHeader.DataDirectory[ IMAGE_DIRECTORY_ENTRY_EXPORT ].VirtualAddress );
 	pFunctionAddreses	= ( PDWORD ) ( DllBase + pExportDirectory->AddressOfFunctions );
 	pFunctionNames		= ( PDWORD ) ( DllBase + pExportDirectory->AddressOfNames );
 	pOrdinals			= ( PWORD )  ( DllBase + pExportDirectory->AddressOfNameOrdinals );
@@ -434,7 +417,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 	{
 		for ( unsigned int OrdinalIndex = 0; OrdinalIndex < pExportDirectory->NumberOfNames; OrdinalIndex++ )				// Iterate over each function in ntdll
 		{
-			if ( HashStringA( ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ) ) == Hashes[ SyscallIndex ] )		// Check if function hash matches specified hash. If match, begin resolving SSN.
+			if ( HashStringA( ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ) ) == Hashes[ SyscallIndex ] )			// Check if function hash matches specified hash. If match, begin resolving SSN.
 			{
 
 # ifndef wc_DEBUG
@@ -558,37 +541,40 @@ PSYSCALL_LIST InitializeSystemCalls()
 	return pSyscallList;
 }
 
+/* ---------------- System call wrappers ------------------ */
 
-NTSTATUS NtAllocateVirtualMemory(PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID* BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection)
+NTSTATUS NtAllocateVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection )
 {
-	SetSyscallPointer(((PSYSCALL) & (pSyscallList->NtAllocateVirtualMemory)));
-	return SystemCall(ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection);
+	SetSyscallPointer( (PSYSCALL) & ( pSyscalls->NtAllocateVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection );
+}
+
+NTSTATUS NtProtectVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection )
+{
+	SetSyscallPointer( (PSYSCALL) & ( pSyscalls->NtProtectVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, RegionSize, NewAccessProtection, OldAccessProtection );
+}
+
+NTSTATUS NtWriteVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscalls->NtWriteVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit );
+}
+
+NTSTATUS NtCreateThreadEx( PSYSCALL_LIST pSyscallList, PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtCreateThreadEx ) );
+	return SystemCall( ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList );
 };
 
-
-NTSTATUS NtFreeVirtualMemory(PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis)
+NTSTATUS NtWaitForSingleObject( PSYSCALL_LIST pSyscallList, HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout )
 {
-	SetSyscallPointer(((PSYSCALL) & (pSyscallList->NtFreeVirtualMemory)));
-	return SystemCall(ProcessHandle, BaseAddress, RegionSize, FreeTypeThis);
-};
-
-
-NTSTATUS NtWriteVirtualMemory(PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID BaseAddress, PVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit)
-{
-	SetSyscallPointer(((PSYSCALL) & (pSyscallList->NtWriteVirtualMemory)));
-	return SystemCall(ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit);
-};
-
-
-NTSTATUS NtCreateThreadEx(PSYSCALL_LIST pSyscallList, PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList)
-{
-	SetSyscallPointer((PSYSCALL) & (pSyscallList->NtCreateThreadEx));
-	return SystemCall(ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList);
-};
-
-
-NTSTATUS NtWaitForSingleObject(PSYSCALL_LIST pSyscallList, HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout)
-{
-	SetSyscallPointer((PSYSCALL) & (pSyscallList->NtWaitForSingleObject));
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtWaitForSingleObject ) );
 	return SystemCall(Handle, Alertable, Timeout);
+};
+
+NTSTATUS NtFreeVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtFreeVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, RegionSize, FreeTypeThis );
 };

