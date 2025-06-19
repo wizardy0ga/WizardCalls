@@ -22,7 +22,6 @@
 		mov r10, rcx				; r10 = function call parameters
 		mov eax, [r11]				; eax = System Service Number ( SSN )
 		jmp qword ptr [r11 + 8]		; Jump to syscall instruction addresss
-		ret
 	SystemCall endp
 
 end
