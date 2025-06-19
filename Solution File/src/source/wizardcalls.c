@@ -11,32 +11,31 @@
 
 /* ------------------ Control Macros ------------------ */
 
-# define GLOBAL
 # define RANDOMIZE_JUMP_ADDRESS
-# define wc_DEBUG
+//# define DEBUG
 
 /* ------------------- Value Macros ------------------- */
 
 // Misc
-# define wc_HASH_SEED		7627
+# define HASH_SEED			7627
 # define UP					-32
 # define DOWN				32
 # define SYSCALL_STUB_SIZE	32
 
 // Dlls
-# define wc_NTDLL					0x45FB4B09
+# define NTDLL					0x45FB4B09
 
 // Functions
-# define wc_NTALLOCATEVIRTUALMEMORY	0xEDEBBBFE
-# define wc_NTFREEVIRTUALMEMORY		0x215B656F
-# define wc_NTWRITEVIRTUALMEMORY	0x9EA23BFE
-# define wc_NTCREATETHREADEX		0x9AE1FB4A
-# define wc_NTWAITFORSINGLEOBJECT	0xA41B21EA
-# define wc_NTPROTECTVIRTUALMEMORY	0xA74F59AE
+# define NTALLOCATEVIRTUALMEMORY	0xEDEBBBFE
+# define NTFREEVIRTUALMEMORY		0x215B656F
+# define NTWRITEVIRTUALMEMORY		0x9EA23BFE
+# define NTCREATETHREADEX			0x9AE1FB4A
+# define NTWAITFORSINGLEOBJECT		0xA41B21EA
+# define NTPROTECTVIRTUALMEMORY		0xA74F59AE
 
 // Hash list. This is important. Hashes must be defined in order the order they are defined in syscall list. This allows hashes to be resolved to appropriate syscall
 // structure in parallel.
-# define wc_HASHES wc_NTALLOCATEVIRTUALMEMORY, wc_NTFREEVIRTUALMEMORY, wc_NTWRITEVIRTUALMEMORY, wc_NTPROTECTVIRTUALMEMORY, wc_NTCREATETHREADEX, wc_NTWAITFORSINGLEOBJECT
+# define HASHES NTALLOCATEVIRTUALMEMORY, NTFREEVIRTUALMEMORY, NTWRITEVIRTUALMEMORY, NTPROTECTVIRTUALMEMORY, NTCREATETHREADEX, NTWAITFORSINGLEOBJECT
 
 // x64 op codes
 # define RET		0xC3
@@ -53,13 +52,13 @@
 # define JNE_INT2E_OFFSET	3
 
 /* ------------------ Function Macros ----------------- */
-# ifdef wc_DEBUG
+# ifdef DEBUG
 # include <stdio.h>
-# define wc_dbg( msg, ... )        printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
+# define dbg( msg, ... )        printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
 # endif
 
-# ifndef wc_DEBUG
-# define wc_dbg( msg, ... )        do {} while (0)
+# ifndef DEBUG
+# define dbg( msg, ... )        do {} while (0)
 # endif
 
 # define HashStringA( String )	HashStringSdbmA( String )
@@ -223,7 +222,7 @@ static int _rand( int seed )
 */
 static DWORD HashStringSdbmW( _In_ LPCWSTR String )
 {
-	ULONG Hash = wc_HASH_SEED;
+	ULONG Hash = HASH_SEED;
 	INT c;
 
 	while ( c = *String++ )
@@ -245,7 +244,7 @@ static DWORD HashStringSdbmW( _In_ LPCWSTR String )
 */
 static DWORD HashStringSdbmA(_In_ LPCSTR String)
 {
-	ULONG Hash = wc_HASH_SEED;
+	ULONG Hash = HASH_SEED;
 	INT c;
 
 	while (c = *String++)
@@ -308,7 +307,7 @@ static HMODULE GetPebModuleByHash( DWORD Hash )
 	/* Get a pointer to the process environment block */
 	if ( ( pPeb = ( PPROC_ENV_BLOCK )__readgsqword( 0x60 ) ) == NULL ) 
 	{
-		wc_dbg( "NULL was returned for PEB." );
+		dbg( "NULL was returned for PEB." );
 		return NULL;
 	}
 
@@ -330,13 +329,13 @@ static HMODULE GetPebModuleByHash( DWORD Hash )
 
 			if ( HashStringW( ModuleName ) == Hash )
 			{
-				wc_dbg( "Resolved 0x%0.8X to %S at 0x%p", Hash, ModuleName, pLoadedModule->DllBase );
+				dbg( "Resolved 0x%0.8X to %S at 0x%p", Hash, ModuleName, pLoadedModule->DllBase );
 				return ( HMODULE )pLoadedModule->DllBase;
 			}
 		}
 	}
 
-	wc_dbg( "Could not resolve 0x%0.8X to any module in this process.", Hash );
+	dbg( "Could not resolve 0x%0.8X to any module in this process.", Hash );
 	return NULL;
 }
 
@@ -366,20 +365,20 @@ PSYSCALL_LIST InitializeSystemCalls()
 	PBYTE						pFuncAddr;
 	NTSTATUS					Status;
 	fpWzDAllocate				WzDAllocate = 0;
-	DWORD						Hashes[ sizeof( wc_HASHES ) * sizeof( wc_HASHES ) ] = { wc_HASHES };
+	DWORD						Hashes[ sizeof( HASHES ) * sizeof( HASHES ) ] = { HASHES };
 	SIZE_T						SyscallListSize = sizeof(SYSCALL_LIST);
 
-	wc_dbg( "Initializing system calls..." );
+	dbg( "Initializing system calls..." );
 
 	/* Acquire NTDLLs base address */
-	if ( ( DllBase = ( ULONG_PTR ) GetPebModuleByHash( wc_NTDLL ) ) == 0 )
+	if ( ( DllBase = ( ULONG_PTR ) GetPebModuleByHash( NTDLL ) ) == 0 )
 		return NULL;
 
 	/* Parse NT Headers */
 	pNtHeaders = ( PIMAGE_NT_HEADERS ) ( DllBase + ( ( PIMAGE_DOS_HEADER )DllBase )->e_lfanew );
 	if ( pNtHeaders->Signature != IMAGE_NT_SIGNATURE ) 
 	{
-		wc_dbg( "NT signature mismatch while parsing ntdll at 0x%p", ( PVOID )DllBase );
+		dbg( "NT signature mismatch while parsing ntdll at 0x%p", ( PVOID )DllBase );
 		return NULL;
 	}
 
@@ -392,21 +391,21 @@ PSYSCALL_LIST InitializeSystemCalls()
 	
 	/* Locate NtAllocateVirtualMemory to create the syscall list*/
 	for ( unsigned int OrdinalIndex = 0; OrdinalIndex < pExportDirectory->NumberOfNames; OrdinalIndex++ )
-		if ( HashStringA( ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ) ) == wc_NTALLOCATEVIRTUALMEMORY )
+		if ( HashStringA( ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ) ) == NTALLOCATEVIRTUALMEMORY )
 		{
 			WzDAllocate = ( fpWzDAllocate ) ( DllBase + pFunctionAddreses[ pOrdinals [ OrdinalIndex ] ] );
 		}
 
 	if ( !WzDAllocate )
 	{
-		wc_dbg( "Could not locate NtAllocateVirtualMemory" );
+		dbg( "Could not locate NtAllocateVirtualMemory" );
 		return NULL;
 	}
 
 	/* Create & populate syscall list */
 	if ( ( Status = WzDAllocate( ( HANDLE )-1, ( PVOID* )&pSyscallList, 0, &SyscallListSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE ) ) != NT_SUCCESS )
 	{
-		wc_dbg( "Could not allocate memory for syscall list. 0x%0.8X", Status );
+		dbg( "Could not allocate memory for syscall list. 0x%0.8X", Status );
 		return NULL;
 	}
 	ZeroMem( ( PVOID )pSyscallList, sizeof( SYSCALL_LIST ) );
@@ -420,7 +419,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 			if ( HashStringA( ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ) ) == Hashes[ SyscallIndex ] )			// Check if function hash matches specified hash. If match, begin resolving SSN.
 			{
 
-# ifndef wc_DEBUG
+# ifndef DEBUG
 				/* Wipe hash from memory */
 				ZeroMem( &Hashes[ SyscallIndex ], sizeof( DWORD ) );
 # endif
@@ -443,7 +442,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 				/* Check if a hook is present */
 				else if ( pFuncAddr[0] == JMP || pFuncAddr[3] == JMP )
 				{
-					wc_dbg( "Detected a hook in %s", ( PCHAR )( DllBase + pFunctionNames[ OrdinalIndex ] ) );
+					dbg( "Detected a hook in %s", ( PCHAR )( DllBase + pFunctionNames[ OrdinalIndex ] ) );
 					for ( int syscall_stub_index = 1; syscall_stub_index <= 255; syscall_stub_index ) 
 					{
 
@@ -466,14 +465,14 @@ PSYSCALL_LIST InitializeSystemCalls()
 							break;
 						}
 					}
-					wc_dbg( "Could not locate SSN." );
+					dbg( "Could not locate SSN." );
 					return NULL;
 				}
 
 				/* Fail if no ssn or hook is found */
 				else 
 				{
-					wc_dbg( "Could not locate an SSN." );
+					dbg( "Could not locate an SSN." );
 					return NULL;
 				}
 
@@ -519,16 +518,16 @@ PSYSCALL_LIST InitializeSystemCalls()
 # endif
 				if ( !pSyscall->SSN || !pSyscall->JumpAddress )
 				{
-					wc_dbg( "Could not locate either SSN or syscall jump address." );
+					dbg( "Could not locate either SSN or syscall jump address." );
 					return NULL;
 				}
 
 # ifndef RANDOMIZE_JUMP_ADDRESS
-				wc_dbg( "Resolved 0x%0.8X to %s at 0x%p\n\t[+] > SSN: 0x%0.2X\n\t[+] > Jump Address: 0x%p", Hashes[ SyscallIndex ], ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ), pFuncAddr, pSyscall->SSN, pSyscall->JumpAddress );
+				dbg( "Resolved 0x%0.8X to %s at 0x%p\n\t[+] > SSN: 0x%0.2X\n\t[+] > Jump Address: 0x%p", Hashes[ SyscallIndex ], ( PCHAR ) ( DllBase + pFunctionNames[ OrdinalIndex ] ), pFuncAddr, pSyscall->SSN, pSyscall->JumpAddress );
 # endif
 
 # ifdef RANDOMIZE_JUMP_ADDRESS
-				wc_dbg( "Resolved 0x%0.8X to %s at 0x%p\n\t[+] > SSN: 0x%0.2X\n\t[+] > Jump Address: 0x%p ( %s )", Hashes[ SyscallIndex ], ( PCHAR )( DllBase + pFunctionNames[ OrdinalIndex ] ), pFuncAddr, pSyscall->SSN, pSyscall->JumpAddress, ( PCHAR ) ( DllBase + pFunctionNames[ Seed ] ) );
+				dbg( "Resolved 0x%0.8X to %s at 0x%p\n\t[+] > SSN: 0x%0.2X\n\t[+] > Jump Address: 0x%p ( %s )", Hashes[ SyscallIndex ], ( PCHAR )( DllBase + pFunctionNames[ OrdinalIndex ] ), pFuncAddr, pSyscall->SSN, pSyscall->JumpAddress, ( PCHAR ) ( DllBase + pFunctionNames[ Seed ] ) );
 # endif
 			}
 		}
@@ -537,27 +536,27 @@ PSYSCALL_LIST InitializeSystemCalls()
 		pSyscall++;
 	}
 	
-	wc_dbg( "Syscall initialization successful!" );
+	dbg( "Syscall initialization successful!" );
 	return pSyscallList;
 }
 
 /* ---------------- System call wrappers ------------------ */
-
-NTSTATUS NtAllocateVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection )
+# ifndef GLOBAL
+NTSTATUS NtAllocateVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection )
 {
-	SetSyscallPointer( (PSYSCALL) & ( pSyscalls->NtAllocateVirtualMemory ) );
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtAllocateVirtualMemory ) );
 	return SystemCall( ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection );
 }
 
-NTSTATUS NtProtectVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection )
+NTSTATUS NtProtectVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection )
 {
-	SetSyscallPointer( (PSYSCALL) & ( pSyscalls->NtProtectVirtualMemory ) );
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtProtectVirtualMemory ) );
 	return SystemCall( ProcessHandle, BaseAddress, RegionSize, NewAccessProtection, OldAccessProtection );
 }
 
-NTSTATUS NtWriteVirtualMemory( PSYSCALL_LIST pSyscalls, HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit )
+NTSTATUS NtWriteVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit )
 {
-	SetSyscallPointer( ( PSYSCALL ) & ( pSyscalls->NtWriteVirtualMemory ) );
+	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtWriteVirtualMemory ) );
 	return SystemCall( ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit );
 }
 
@@ -578,3 +577,43 @@ NTSTATUS NtFreeVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, 
 	SetSyscallPointer( ( PSYSCALL ) & ( pSyscallList->NtFreeVirtualMemory ) );
 	return SystemCall( ProcessHandle, BaseAddress, RegionSize, FreeTypeThis );
 };
+# endif
+
+
+# ifdef GLOBAL
+NTSTATUS NtAllocateVirtualMemory( HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtAllocateVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, ZeroBits, RegionSize, AllocationType, Protection );
+}
+
+NTSTATUS NtProtectVirtualMemory( HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG NewAccessProtection, PULONG OldAccessProtection )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtProtectVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, RegionSize, NewAccessProtection, OldAccessProtection );
+}
+
+NTSTATUS NtWriteVirtualMemory( HANDLE ProcessHandle, LPVOID BaseAddress, LPCVOID Buffer, ULONG NumberOfBytesToWrite, PULONG NumberOfBytesWrittenit )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtWriteVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, Buffer, NumberOfBytesToWrite, NumberOfBytesWrittenit );
+}
+
+NTSTATUS NtCreateThreadEx( PHANDLE ThreadHandle, ACCESS_MASK DesiredAccess, PVOID ObjectAttributes, HANDLE ProcessHandle, LPTHREAD_START_ROUTINE StartRoutine, PVOID Argument, ULONG CreateFlags, SIZE_T ZeroBits, SIZE_T StackSize, SIZE_T MaximumStackSize, PVOID AttributeList )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtCreateThreadEx ) );
+	return SystemCall( ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList );
+};
+
+NTSTATUS NtWaitForSingleObject( HANDLE Handle, BOOLEAN Alertable, PLARGE_INTEGER Timeout )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtWaitForSingleObject ) );
+	return SystemCall(Handle, Alertable, Timeout);
+};
+
+NTSTATUS NtFreeVirtualMemory( HANDLE ProcessHandle, PVOID* BaseAddress, PSIZE_T RegionSize, ULONG FreeTypeThis )
+{
+	SetSyscallPointer( ( PSYSCALL ) & ( SYSCALL_LIST_NAME->NtFreeVirtualMemory ) );
+	return SystemCall( ProcessHandle, BaseAddress, RegionSize, FreeTypeThis );
+};
+# endif
