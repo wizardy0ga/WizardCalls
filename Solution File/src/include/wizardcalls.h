@@ -10,7 +10,7 @@
 # include <Windows.h>
 
 /* ------------------ Control Macros ------------------ */
-# define GLOBAL
+// # define GLOBAL
 
 /* ---------------------- Macros ---------------------- */
 
@@ -76,7 +76,6 @@ typedef struct _SYSCALL_LIST_
 SYSCALL_LIST, *PSYSCALL_LIST;
 
 /* -------------------- Externals --------------------- */
-
 
 # ifdef GLOBAL
 extern PSYSCALL_LIST SYSCALL_LIST_NAME;
