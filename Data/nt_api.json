@@ -446,12 +446,12 @@
         {
           "in_out": "IN",
           "type": "LPTHREAD_START_ROUTINE",
-          "name": "lpStartAddress"
+          "name": "StartRoutine"
         },
         {
           "in_out": "IN",
           "type": "PVOID",
-          "name": "lpParameter"
+          "name": "Argument"
         },
         {
           "in_out": "IN",
@@ -461,22 +461,22 @@
         {
           "in_out": "IN",
           "type": "SIZE_T",
-          "name": "StackZeroBits"
+          "name": "ZeroBits"
         },
         {
           "in_out": "IN",
           "type": "SIZE_T",
-          "name": "SizeOfStackCommit"
+          "name": "StackSize"
         },
         {
           "in_out": "IN",
           "type": "SIZE_T",
-          "name": "SizeOfStackReserve"
+          "name": "MaximumStackSize"
         },
         {
           "in_out": "OUT",
           "type": "PVOID",
-          "name": "lpBytesBufferMERCHANTABILITY"
+          "name": "AttributeList"
         }
       ]
     },
@@ -860,6 +860,30 @@
         }
       ]
     },
+    "NtFlushInstructionCache": {
+      "catetory": "",
+      "dll": "ntdll.dll",
+      "header": "",
+      "n_arguments": 4,
+      "arguments": [
+        {
+          "in_out": "IN",
+          "type": "HANDLE",
+          "name": "ProcessHandle"
+        },
+        {
+          "in_out": "_in_opt_",
+          "type": "PVOID",
+          "name": "BaseAddress"
+        },
+        {
+          "in_out": "IN",
+          "type": "SIZE_T",
+          "name": "RegionSize"
+        }
+        
+      ]
+    },
     "NtFreeVirtualMemory": {
       "category": "Processes",
       "dll": "",
@@ -1158,13 +1182,13 @@
         },
         {
           "in_out": "__in",
-          "type": "POBJECT_ATTRIBUTES",
+          "type": "PVOID",
           "name": "ObjectAttributes"
         },
         {
           "in_out": "__in_opt",
-          "type": "PCLIENT_ID",
-          "name": "ClientIdThis"
+          "type": "PVOID",
+          "name": "ClientId"
         }
       ]
     },
@@ -1241,7 +1265,7 @@
         {
           "in_out": "__in",
           "type": "PCLIENT_ID",
-          "name": "ClientIdThis"
+          "name": "ClientId"
         }
       ]
     },
@@ -1258,14 +1282,14 @@
           "name": "ProcessHandle"
         },
         {
-          "in_out": "IN",
-          "type": "OUT",
-          "name": "PVOID"
+          "in_out": "IN OUT",
+          "type": "PVOID*",
+          "name": "BaseAddress"
         },
         {
-          "in_out": "IN",
-          "type": "OUT",
-          "name": "PSIZE_T"
+          "in_out": "IN OUT",
+          "type": "PSIZE_T",
+          "name": "RegionSize"
         },
         {
           "in_out": "IN",
@@ -1275,7 +1299,7 @@
         {
           "in_out": "OUT",
           "type": "PULONG",
-          "name": "OldAccessProtectionit"
+          "name": "OldAccessProtection"
         }
       ]
     },
@@ -2266,13 +2290,13 @@
         },
         {
           "in_out": "__in",
-          "type": "SIZE_T",
+          "type": "ULONG",
           "name": "NumberOfBytesToWrite"
         },
         {
           "in_out": "__out_opt",
-          "type": "PSIZE_T",
-          "name": "NumberOfBytesWrittenit"
+          "type": "PULONG",
+          "name": "NumberOfBytesWritten"
         }
       ]
     },
