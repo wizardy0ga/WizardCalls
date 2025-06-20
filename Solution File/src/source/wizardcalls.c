@@ -12,7 +12,7 @@
 /* ------------------ Control Macros ------------------ */
 
 # define RANDOMIZE_JUMP_ADDRESS
-//# define DEBUG
+# define DEBUG
 
 /* ------------------- Value Macros ------------------- */
 
@@ -52,6 +52,7 @@
 # define JNE_INT2E_OFFSET	3
 
 /* ------------------ Function Macros ----------------- */
+
 # ifdef DEBUG
 # include <stdio.h>
 # define dbg( msg, ... )        printf( "[DEBUG]::Wizardcalls.%s.L%d -> " msg "\n", __func__, __LINE__, ##__VA_ARGS__ )
@@ -541,6 +542,7 @@ PSYSCALL_LIST InitializeSystemCalls()
 }
 
 /* ---------------- System call wrappers ------------------ */
+
 # ifndef GLOBAL
 NTSTATUS NtAllocateVirtualMemory( PSYSCALL_LIST pSyscallList, HANDLE ProcessHandle, PVOID *BaseAddress, ULONG_PTR ZeroBits, PSIZE_T RegionSize, ULONG AllocationType, ULONG Protection )
 {
