@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import json
+import uuid
 import random
 import argparse
 
@@ -68,10 +69,8 @@ class Syscall( object ):
 
         return string
 
-
     def create_hash_macro( self ) -> str:
         return f"# define { self.syscall_name.upper() }\t{ self.hash_algo( self.seed, self.syscall_name ) }"
-
 
     def create_macro( self ) -> str:
         """
@@ -149,13 +148,14 @@ class SourceCode( object ):
 
     def insert_header( self, additional_content = "" ) -> str:
         """ Insert a comment block at the top of the file, describing the file """
-        header = ""
         match self.language:
             case 'asm':
+                header = ";\n"
                 for line in self.header_content.splitlines():
                     header += f"; { line }\n"
-                    for line in additional_content.splitlines():
-                        header += f"; { line }\n"
+                for line in additional_content.splitlines():
+                    header += f"; { line }\n"
+                header += ";\n"
             case 'c':
                 header = "/*\n"
                 for line in self.header_content.splitlines():
@@ -177,6 +177,10 @@ class WizardCallsAsm( SourceCode ):
         )
         self.comment_regex += [ r';.*' ]
         self.language       = "asm"
+
+        # Remove initial banner comment
+        self.replace_content( new_content = '', pattern = r';.*\n;\w.*\n.*\n.*\n.*' )
+
 
 class WizardCallsFile( SourceCode ):
     """ Base object for the wizardcalls .c & .h files """
@@ -555,9 +559,11 @@ if __name__ == "__main__":
     #
     [ file.remove_blank_lines() for file in [ asm_file, header_file, source_file ] ]
 
-    # Insert file header
-    asm_file.insert_header()
-    [ file.insert_header( additional_content = 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) ) for file in [ header_file, source_file ] ]
+    # Insert file headers
+    build_id = str(uuid.uuid4())
+    asm_file.insert_header( additional_content = f'ID: { build_id }\n' )
+    for file in [ header_file, source_file ]:
+        file.insert_header( additional_content = f'ID: { build_id }\n' + 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) )
 
     source_file.write_to_dir( ouptut_directory )
     header_file.write_to_dir( ouptut_directory )
