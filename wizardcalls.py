@@ -111,7 +111,6 @@ class Syscall( object ):
 
 class SourceCode( object ):
     """ Parent object for source code files """
-
     def __init__ ( self, source_file: str, filename: str ):
         self.filename       = filename
         self.path_on_disk   = ""
@@ -169,7 +168,6 @@ class SourceCode( object ):
 
 class WizardCallsAsm( SourceCode ):
     """ Represents the wizardcalls assembly file """
-
     def __init__( self, globals: bool ):
         super().__init__( 
             source_file = ASM_GLOBAL if globals else ASM 
@@ -183,8 +181,7 @@ class WizardCallsAsm( SourceCode ):
 
 class WizardCallsFile( SourceCode ):
     """ Base object for the wizardcalls .c & .h files """
-    
-    def __init__( self, syscalls: list, globals: bool, source_file: str, filename: str ):
+    def __init__( self, globals: bool, syscalls: list, source_file: str, filename: str ):
         super().__init__( source_file, filename = filename)
         
         self.language      = 'c'
@@ -204,8 +201,7 @@ class WizardCallsFile( SourceCode ):
 
 class WizardCallsSource( WizardCallsFile ):
     """ Represents the source code (.c) file for wizard calls """
-
-    def __init__( self, globals: bool, syscalls: bool, hash_seed: int, hash_algo: str, randomize_jump_address: bool, debug: bool ):
+    def __init__( self, globals: bool, syscalls: list, hash_seed: int, hash_algo: str, randomize_jump_address: bool, debug: bool ):
         super().__init__( syscalls = syscalls, globals = globals, source_file = SOURCE, filename = 'wizardcalls.c' )
 
         self.hash_seed  = hash_seed
@@ -300,7 +296,6 @@ class WizardCallsSource( WizardCallsFile ):
             hash = ( ( hash << 5 ) + hash ) + ord( i )
         return hex( hash & 0xFFFFFFFF ).upper().replace( 'X', 'x' )
 
-
     def hash_sdbm( self, string: str ) -> str:
         """ Hash a string using the SDBM hash algorithm -> 0xDEADBEEF """
         Hash = self.hash_seed
@@ -310,8 +305,7 @@ class WizardCallsSource( WizardCallsFile ):
         
 class WizardCallsHeader( WizardCallsFile ):
     """ Represents the header file for wizardcalls """
-
-    def __init__( self, syscall_list_name:str, globals: bool,  syscalls: list ):
+    def __init__( self, globals: bool,  syscalls: list, syscall_list_name:str ):
         super().__init__( source_file=HEADER, syscalls = syscalls, globals = globals, filename = 'wizardcalls.h' )
 
         # Remove global macro reference
@@ -359,6 +353,13 @@ class WizardCallsHeader( WizardCallsFile ):
             new_content = '\n'.join([ syscall.prototype for syscall in self.syscalls.values() ])
             , pattern = r'(?s)# ifdef GLOBAL\nNTSTATUS.*?# ifndef GLOBAL\nNTSTATUS.*?# endif'
         )
+
+class WizardCalls( object ):
+    """ Container object for all 3 related source file objects """
+    def __init__( self, globals: bool, syscalls: list, syscall_list_name:str, hash_seed: int, hash_algo:str, randomize_jump_address:bool, debug: bool ):
+        self.header     = WizardCallsHeader( globals, syscalls, syscall_list_name )
+        self.source     = WizardCallsSource( globals, syscalls, hash_seed, hash_algo, randomize_jump_address, debug )
+        self.asm_source = WizardCallsAsm( globals )
 
 # -------------------------------- Entry --------------------------------
 if __name__ == "__main__":
@@ -508,7 +509,6 @@ if __name__ == "__main__":
     output_directory = os.path.join( os.getcwd(), args.outdir )
 
     # Import API calls from user
-    #
     syscalls             = [ "NtAllocateVirtualMemory" ]
     user_syscall_import  = None
     match args.file:
@@ -519,7 +519,6 @@ if __name__ == "__main__":
             user_syscall_import = args.apicalls   
     
     # Validate syscall imports
-    #
     for syscall in user_syscall_import:
         if syscall not in nt_api_data:
             wc_error( f"{ RED }{ syscall }{ YELLOW } is not a valid syscall in { NT_DATA }. Adjust the dataset if this is a mistake.{ END }" )
@@ -528,49 +527,50 @@ if __name__ == "__main__":
             syscalls += [ syscall ]
 
     # Print banner & config
-    # 
     args_dict = vars( args )
     for arg in [ 'apicalls', 'file' ]:
         del args_dict[ arg ]
     print_dict_table(args_dict)
 
     # Print syscall import information
-    #
     wc_print( f"Imported { len( syscalls ) } system calls" )
     for syscall in syscalls:
         print( f"\t{ GREEN }+{ WHITE } { syscall } ( { GREEN }Default{ WHITE } )" if syscall == "NtAllocateVirtualMemory" else f"\t{ GREEN }+{ WHITE } { syscall }" )
 
-    # Creaate and write source files
-    #
-    asm_file    = WizardCallsAsm( globals = args.globals )
-    header_file = WizardCallsHeader( globals = args.globals, syscalls = syscalls, syscall_list_name = args.syscall_list_name ) 
-    source_file = WizardCallsSource( globals = args.globals, syscalls = syscalls, randomize_jump_address = args.random_syscall_addr, debug = args.debug, hash_algo = args.algo, hash_seed = args.seed )
-    
+    # Create source code object 
+    wizard_calls = WizardCalls( 
+        globals                     = args.globals
+        , syscalls                  = syscalls
+        , syscall_list_name         = args.syscall_list_name
+        , randomize_jump_address    = args.random_syscall_addr
+        , debug                     = args.debug
+        , hash_algo                 = args.algo
+        , hash_seed                 = args.seed 
+    )
+
     # Remove comments if specified
-    #
     if args.remove_comments:
-        [ file.remove_comments() for file in [ asm_file, header_file, source_file ] ]
+        [ file.remove_comments() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
     
     # Cleanup new lines
-    #
-    [ file.remove_blank_lines() for file in [ asm_file, header_file, source_file ] ]
+    [ file.remove_blank_lines() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
 
     # Insert file headers
     build_id = str(uuid.uuid4())
-    asm_file.insert_header( additional_content = f'ID: { build_id }\n' )
-    for file in [ header_file, source_file ]:
+    wizard_calls.asm_source.insert_header( additional_content = f'ID: { build_id }\n' )
+    for file in [ wizard_calls.source, wizard_calls.header ]:
         file.insert_header( additional_content = f'ID: { build_id }\n' + 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) )
 
-    source_file.write_to_dir( output_directory )
-    header_file.write_to_dir( output_directory )
-    asm_file.write_to_dir( output_directory )
+    # Write to disk
+    wizard_calls.source.write_to_dir( output_directory )
+    wizard_calls.header.write_to_dir( output_directory )
+    wizard_calls.asm_source.write_to_dir( output_directory )
     
     # Print new file paths
-    #
     for name, file in {
-        'assembly': asm_file,
-        'source': source_file,
-        'header': header_file
+        'assembly': wizard_calls.asm_source,
+        'source': wizard_calls.source,
+        'header': wizard_calls.header
     }.items():
         wc_print( f"Wrote {CYAN}{ name }{WHITE} file to { GREEN }{ file.path_on_disk.replace('\\..', '') }{ END }" )
     
