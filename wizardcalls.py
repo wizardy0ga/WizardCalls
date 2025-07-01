@@ -39,9 +39,9 @@ class Syscall( object ):
 
     def __init__( self, name: str, _global: bool ):
         if name not in nt_api_data.keys():
-            raise Exception( f"{RED}{name}{END} is not a valid syscall in { os.path.join( os.getcwd(), NT_DATA ) }" )
+            raise Exception( f"{ RED }{ name }{ END } is not a valid syscall in { os.path.join( os.getcwd(), NT_DATA ) }" )
         
-        self.data           = nt_api_data[name]
+        self.data           = nt_api_data[ name ]
         self.syscall_name   = name
         self.is_global      = _global
         self.wzd_macro      = self.create_macro()
@@ -181,7 +181,6 @@ class WizardCallsAsm( SourceCode ):
         # Remove initial banner comment
         self.replace_content( new_content = '', pattern = r';.*\n;\w.*\n.*\n.*\n.*' )
 
-
 class WizardCallsFile( SourceCode ):
     """ Base object for the wizardcalls .c & .h files """
     
@@ -214,8 +213,8 @@ class WizardCallsSource( WizardCallsFile ):
 
         match hash_algo:
             case 'sdbm':
-                self.hash_algo      = self.hash_sdbm
-                self.hash_function  = 'HashStringSdbm'
+                self.hash_algo          = self.hash_sdbm
+                self.hash_function      = 'HashStringSdbm'
             case 'djb2':
                 self.hash_algo          = self.hash_djb2
                 self.hash_function      = 'HashStringDjb2'
@@ -362,17 +361,14 @@ class WizardCallsHeader( WizardCallsFile ):
         )
 
 # -------------------------------- Entry --------------------------------
-
 if __name__ == "__main__":
 
 # --------------------------- Private Classes ---------------------------
-
     class AlignedHelpFormatter( argparse.HelpFormatter ):
         def __init__( self, prog ):
             super().__init__( prog, max_help_position=35 )
 
 # -------------------------- Private Functions --------------------------
-
     def dir_exists( path: str ) -> str:
         """ Validate directory existence for arguments """
         if not os.path.isdir( path ):
@@ -385,16 +381,16 @@ if __name__ == "__main__":
             raise argparse.ArgumentTypeError( f"The file '{ path }' does not exist." )
         return path
 
-    def wc_print( msg: str ):
+    def wc_print( msg: str ) -> None:
         """ Print general messages """
         print( GREEN + "[" + PURPLE + " > " + GREEN + "] " + WHITE + msg + END )
 
-    def wc_error( msg: str ):
+    def wc_error( msg: str ) -> None:
         """ Print error messages """
         print( f"{ WHITE }[{ RED } ! { WHITE }] { YELLOW }{ msg }{ END }")
 
-    def print_dict_table( dictionary ):
-        """ Internal function to print banner and configuration"""
+    def print_dict_table( dictionary: dict ) -> None:
+        """ Internal function to print banner and configuration """
 
         # Get widths of key & value fields
         key_width = max( len( str( key ) ) for key in dictionary ) + 1
@@ -427,8 +423,7 @@ if __name__ == "__main__":
         # Print the bottom of the config
         print(bottom)
 
-# -------------------------- Main --------------------------
-
+# ------------------------ Arguments -----------------------
     parser = argparse.ArgumentParser( formatter_class=AlignedHelpFormatter )
 
     parser.add_argument( 
@@ -439,8 +434,8 @@ if __name__ == "__main__":
         , help      = 'A directory to write the source files to. Defaults to "Out" directory.'
     )
 
+    # ------------------- Build Options --------------------
     build_opt_group = parser.add_argument_group( title = "Build Options", description = "Set options to control how wizardcalls functions" )
-
     build_opt_group.add_argument( 
         '-s'
         , '--seed'
@@ -491,9 +486,9 @@ if __name__ == "__main__":
         , default   = 'pSyscallList'
         , help      = 'Set the name of the PSYSCALL_LIST variable, to be used throughout the code.'
     )
-
+    
+    # ------------------ API Call Inputs -------------------
     input_arg_group = parser.add_mutually_exclusive_group()
-
     input_arg_group.add_argument(
         '--apicalls'
         , type      = str
@@ -508,15 +503,16 @@ if __name__ == "__main__":
         , help    = 'Path to file containing a list of api calls. Use a new line [\\n] to seperate each api call.' 
     )
     args = parser.parse_args()
-    
-    ouptut_directory = os.path.join( os.getcwd(), args.outdir )
+
+# -------------------------- Main --------------------------    
+    output_directory = os.path.join( os.getcwd(), args.outdir )
 
     # Import API calls from user
     #
     syscalls             = [ "NtAllocateVirtualMemory" ]
     user_syscall_import  = None
     match args.file:
-        case type(str):
+        case type( str ):
             with open( args.file, 'r' ) as file:
                 user_syscall_import = file.read().split( '\n' )
         case False:
@@ -565,9 +561,9 @@ if __name__ == "__main__":
     for file in [ header_file, source_file ]:
         file.insert_header( additional_content = f'ID: { build_id }\n' + 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) )
 
-    source_file.write_to_dir( ouptut_directory )
-    header_file.write_to_dir( ouptut_directory )
-    asm_file.write_to_dir( ouptut_directory )
+    source_file.write_to_dir( output_directory )
+    header_file.write_to_dir( output_directory )
+    asm_file.write_to_dir( output_directory )
     
     # Print new file paths
     #
