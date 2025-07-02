@@ -29,7 +29,7 @@ DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'da
 
 # --------------------- Import NT API Data ----------------------
 
-with open( './Data/nt_api.json', 'r' ) as file:
+with open( NT_DATA, 'r' ) as file:
     nt_api_data = json.loads( file.read() )
 
 # --------------------------- Classes ---------------------------
