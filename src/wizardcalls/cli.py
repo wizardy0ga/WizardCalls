@@ -2,7 +2,18 @@ import uuid
 from wizardcalls.core import *
 from wizardcalls.args import parse_user_args
 
+
 # -------------------------- Private Functions --------------------------
+def wc_print( msg: str ) -> None:
+    """ Print general messages """
+    print( GREEN + "[" + PURPLE + " > " + GREEN + "] " + WHITE + msg + END )
+
+
+def wc_error( msg: str ) -> None:
+    """ Print error messages """
+    print( f"{ WHITE }[{ RED } ! { WHITE }] { YELLOW }{ msg }{ END }")
+
+
 def _format_args( action, default_metavar: str ) -> str:
     """ 
     Format an arguments syntax. Taken from argparse.HelpFormatter class. This is a combination of the 
@@ -77,19 +88,12 @@ def print_help( parser ) -> str:
             elif argument == arguments[-1]:
                 table += f'╠{ '═' * max_key_width }╩{ '═' * ( max_val_width - 1 ) }╣\n'
             else:
-                table += f'╠{ '═' * max_key_width }╬{ '═' * ( max_val_width - 1 ) }╣\n'
-    
+                table += f'╠{ '═' * max_key_width }╬{ '═' * ( max_val_width - 1 ) }╣\n'    
     print( table + END )
 
-def wc_print( msg: str ) -> None:
-    """ Print general messages """
-    print( GREEN + "[" + PURPLE + " > " + GREEN + "] " + WHITE + msg + END )
-
-def wc_error( msg: str ) -> None:
-    """ Print error messages """
-    print( f"{ WHITE }[{ RED } ! { WHITE }] { YELLOW }{ msg }{ END }")
 
 def print_banner( spacing: int ) -> None:
+    """ Print the wizardcalls banner """
     print( f"{ GREEN }╔{ '═' * ( spacing + 4) }╗" )
     print( f"║{ PURPLE }{ 'WIZARDCALLS 🧙'.center( spacing + 2, ' ' ) }{ GREEN } ║")
     print( f"║{ RED }{ 'Evading teh h00ks'.center( spacing + 4, ' ' ) }{ GREEN }║")
@@ -99,9 +103,9 @@ def print_banner( spacing: int ) -> None:
     print( f"║{ f"Builder Version:  { CYAN }{ SCRIPT_VERSION }".center( spacing + 11 ) }{ GREEN }║")
     print( f"║{ f"Template Version: { CYAN }{ TEMPLATE_VERSION }".center( spacing + 11 ) }{ GREEN }║")
 
+
 def print_dict_table( dictionary: dict ) -> None:
     """ Internal function to print banner and configuration """
-
     # Get widths of key & value fields
     key_width = max( len( str( key ) ) for key in dictionary ) + 1
     val_width = max( len( str( val ) ) for val in dictionary.values() ) + 2
