@@ -62,7 +62,7 @@ def print_help( parser ) -> str:
                 max_key_width = key_width if key_width > max_key_width else max_key_width
                 max_val_width = val_width if val_width > max_val_width else max_val_width
 
-    print_banner( max_key_width - 2, max_val_width - 2 )
+    print_banner( ( max_key_width + max_val_width - 4 ) )
 
     # Begin building the table string
     max_width = max_key_width + max_val_width
@@ -79,7 +79,6 @@ def print_help( parser ) -> str:
             else:
                 table += f'╠{ '═' * max_key_width }╬{ '═' * ( max_val_width - 1 ) }╣\n'
     
-    #print_banner( max_key_width -2, max_val_width - 2 )
     print( table + END )
 
 def wc_print( msg: str ) -> None:
@@ -90,15 +89,15 @@ def wc_error( msg: str ) -> None:
     """ Print error messages """
     print( f"{ WHITE }[{ RED } ! { WHITE }] { YELLOW }{ msg }{ END }")
 
-def print_banner( key_width: int, val_width: int ) -> None:
-    print( f"{ GREEN }╔{ '═' * ( key_width + val_width + 4) }╗" )
-    print( f"║{ PURPLE }{ 'WIZARDCALLS 🧙'.center( key_width + val_width + 2, ' ' ) }{ GREEN } ║")
-    print( f"║{ RED }{ 'Evading teh h00ks'.center( key_width + val_width + 4, ' ' ) }{ GREEN }║")
-    print( f"║{ RED }{ 'jmp 0x0F05'.center( key_width + val_width + 4, ' ' ) }{ GREEN }║")
-    print( f"║{ ' ' * ( key_width + val_width + 4 ) }║")
-    print( f"║{ f"By:{ WHITE } wizardy0ga".center( key_width + val_width + 11 ) }{ GREEN }║")
-    print( f"║{ f"Builder Version:  { CYAN }{ SCRIPT_VERSION }".center( key_width + val_width + 11 ) }{ GREEN }║")
-    print( f"║{ f"Template Version: { CYAN }{ TEMPLATE_VERSION }".center( key_width + val_width + 11 ) }{ GREEN }║")
+def print_banner( spacing: int ) -> None:
+    print( f"{ GREEN }╔{ '═' * ( spacing + 4) }╗" )
+    print( f"║{ PURPLE }{ 'WIZARDCALLS 🧙'.center( spacing + 2, ' ' ) }{ GREEN } ║")
+    print( f"║{ RED }{ 'Evading teh h00ks'.center( spacing + 4, ' ' ) }{ GREEN }║")
+    print( f"║{ RED }{ 'jmp 0x0F05'.center( spacing + 4, ' ' ) }{ GREEN }║")
+    print( f"║{ ' ' * ( spacing + 4 ) }║")
+    print( f"║{ f"By:{ WHITE } wizardy0ga".center( spacing + 11 ) }{ GREEN }║")
+    print( f"║{ f"Builder Version:  { CYAN }{ SCRIPT_VERSION }".center( spacing + 11 ) }{ GREEN }║")
+    print( f"║{ f"Template Version: { CYAN }{ TEMPLATE_VERSION }".center( spacing + 11 ) }{ GREEN }║")
 
 def print_dict_table( dictionary: dict ) -> None:
     """ Internal function to print banner and configuration """
@@ -113,7 +112,7 @@ def print_dict_table( dictionary: dict ) -> None:
     separator   = f"╠{ '═' * ( key_width + 1 ) }╬{ '═' * ( val_width + 2 ) }╣"
     bottom      = f"╚{ '═' * ( key_width + 1 ) }╩{ '═' * ( val_width + 2)  }╝"
 
-    print_banner( key_width, val_width )
+    print_banner( (key_width + val_width) )
 
     # Print top half of config
     for obj in [ top, header, separator ]:
