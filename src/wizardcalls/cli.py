@@ -138,73 +138,80 @@ def main():
         print(f"╚{ '═' * 54 }╝{ END }")
         exit()
 
-    output_directory = os.path.join( os.getcwd(), args.outdir )
+    try:
+        output_directory = os.path.join( os.getcwd(), args.outdir )
 
-    # Import API calls from user
-    syscalls             = [ "NtAllocateVirtualMemory" ]
-    user_syscall_import  = None
-    if not args.file and not args.syscalls:
-        wc_print('No api calls were given to the script. Specify a list of functions with --file or --syscalls. Use -h for further information')
-        exit()
-    if args.syscalls:
-        user_syscall_import = args.syscalls
-    else:
-        with open( args.file, 'r' ) as file:
-            user_syscall_import = file.read().split( '\n' ) 
+        # Import API calls from user
+        syscalls             = [ "NtAllocateVirtualMemory" ]
+        user_syscall_import  = None
+        if not args.file and not args.syscalls:
+            wc_print('No api calls were given to the script. Specify a list of functions with --file or --syscalls. Use -h for further information')
+            exit()
+        if args.syscalls:
+            user_syscall_import = args.syscalls
+        else:
+            with open( args.file, 'r' ) as file:
+                user_syscall_import = file.read().split( '\n' ) 
+        
+        # Validate syscall imports
+        for syscall in user_syscall_import:
+            if syscall not in nt_api_data:
+                wc_error( f"{ RED }{ syscall }{ YELLOW } is not a valid syscall in { NT_DATA }. Adjust the dataset if this is a mistake.{ END }" )
+                exit( 1 )    
+            if syscall not in syscalls:
+                syscalls += [ syscall ]
+
+        # Print banner & config
+        if not args.quiet:
+            args_dict = vars( args )
+            for arg in [ 'syscalls', 'file' ]:
+                del args_dict[ arg ]
+            print_dict_table(args_dict)
+
+        # Print syscall import information
+        wc_print( f"Imported { len( syscalls ) } system calls" )
+        for syscall in syscalls:
+            print( f"\t{ GREEN }+{ WHITE } { syscall } ( { GREEN }Default{ WHITE } )" if syscall == "NtAllocateVirtualMemory" else f"\t{ GREEN }+{ WHITE } { syscall }" )
+
+        # Create source code object 
+        wizard_calls = WizardCalls( 
+            globals                     = args.globals
+            , syscalls                  = syscalls
+            , syscall_list_name         = args.syscall_list_name
+            , randomize_jump_address    = args.random_syscall_addr
+            , debug                     = args.debug
+            , hash_algo                 = args.algo
+            , hash_seed                 = args.seed 
+        )
+
+        # Remove comments if specified
+        if args.remove_comments:
+            [ file.remove_comments() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
+        
+        # Cleanup new lines
+        [ file.remove_blank_lines() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
+
+        # Insert file headers
+        build_id = str(uuid.uuid4())
+        wizard_calls.asm_source.insert_header( additional_content = f'ID: { build_id }\n' )
+        for file in [ wizard_calls.source, wizard_calls.header ]:
+            file.insert_header( additional_content = f'ID: { build_id }\n' + 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) )
+
+        # Write to disk
+        wizard_calls.source.write_to_dir( output_directory )
+        wizard_calls.header.write_to_dir( output_directory )
+        wizard_calls.asm_source.write_to_dir( output_directory )
+        
+        # Print new file paths
+        for name, file in {
+            'assembly': wizard_calls.asm_source,
+            'source': wizard_calls.source,
+            'header': wizard_calls.header
+        }.items():
+            wc_print( f"Wrote {CYAN}{ name }{WHITE} file to { GREEN }{ file.path_on_disk.replace('\\..', '') }{ END }" )
     
-    # Validate syscall imports
-    for syscall in user_syscall_import:
-        if syscall not in nt_api_data:
-            wc_error( f"{ RED }{ syscall }{ YELLOW } is not a valid syscall in { NT_DATA }. Adjust the dataset if this is a mistake.{ END }" )
-            exit( 1 )    
-        if syscall not in syscalls:
-            syscalls += [ syscall ]
+    except Exception as e:
+        wc_error( f"Wizardcalls failed with unexpected exception: { e }" )
 
-    # Print banner & config
-    if not args.quiet:
-        args_dict = vars( args )
-        for arg in [ 'syscalls', 'file' ]:
-            del args_dict[ arg ]
-        print_dict_table(args_dict)
-
-    # Print syscall import information
-    wc_print( f"Imported { len( syscalls ) } system calls" )
-    for syscall in syscalls:
-        print( f"\t{ GREEN }+{ WHITE } { syscall } ( { GREEN }Default{ WHITE } )" if syscall == "NtAllocateVirtualMemory" else f"\t{ GREEN }+{ WHITE } { syscall }" )
-
-    # Create source code object 
-    wizard_calls = WizardCalls( 
-        globals                     = args.globals
-        , syscalls                  = syscalls
-        , syscall_list_name         = args.syscall_list_name
-        , randomize_jump_address    = args.random_syscall_addr
-        , debug                     = args.debug
-        , hash_algo                 = args.algo
-        , hash_seed                 = args.seed 
-    )
-
-    # Remove comments if specified
-    if args.remove_comments:
-        [ file.remove_comments() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
-    
-    # Cleanup new lines
-    [ file.remove_blank_lines() for file in [ wizard_calls.asm_source, wizard_calls.source, wizard_calls.header ] ]
-
-    # Insert file headers
-    build_id = str(uuid.uuid4())
-    wizard_calls.asm_source.insert_header( additional_content = f'ID: { build_id }\n' )
-    for file in [ wizard_calls.source, wizard_calls.header ]:
-        file.insert_header( additional_content = f'ID: { build_id }\n' + 'Using syscalls:\n\t[+] - ' + '\n\t[+] - '.join( file.syscalls ) )
-
-    # Write to disk
-    wizard_calls.source.write_to_dir( output_directory )
-    wizard_calls.header.write_to_dir( output_directory )
-    wizard_calls.asm_source.write_to_dir( output_directory )
-    
-    # Print new file paths
-    for name, file in {
-        'assembly': wizard_calls.asm_source,
-        'source': wizard_calls.source,
-        'header': wizard_calls.header
-    }.items():
-        wc_print( f"Wrote {CYAN}{ name }{WHITE} file to { GREEN }{ file.path_on_disk.replace('\\..', '') }{ END }" )
+    except KeyboardInterrupt:
+        wc_print( f"Detected user exit request. Quitting..." )
