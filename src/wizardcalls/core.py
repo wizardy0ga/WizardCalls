@@ -15,7 +15,7 @@ ASM_GLOBAL   = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rs
 ASM          = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'source' , 'wizardcalls.x64.asm' )
 HEADER       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'include', 'wizardcalls.h' )
 SOURCE       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'source' , 'wizardcalls.c' )
-DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'data', 'templates', 'Djb2.c' )
+DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Djb2.c' )
 
 # --------------------- Import NT API Data ----------------------
 with open( NT_DATA, 'r' ) as file:
