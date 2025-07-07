@@ -26,6 +26,14 @@ def parse_user_args() -> argparse.ArgumentParser:
         , help      = 'Show this message and exit'
     )
 
+    parser.add_argument(
+        '-v'
+        , '--version'
+        , default   = False
+        , action    = 'store_true'
+        , help      = 'Show the version & exit.'
+    )
+
     parser.add_argument( 
         '-o'
         , '--outdir'

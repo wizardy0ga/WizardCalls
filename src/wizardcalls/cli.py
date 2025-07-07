@@ -133,6 +133,11 @@ def main():
         print_help( parser )
         exit()
 
+    if args.version:
+        print_banner( spacing = 50 )
+        print(f"╚{ '═' * 54 }╝{ END }")
+        exit()
+
     output_directory = os.path.join( os.getcwd(), args.outdir )
 
     # Import API calls from user
