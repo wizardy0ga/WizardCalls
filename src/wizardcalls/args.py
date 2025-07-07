@@ -16,7 +16,15 @@ def file_exists( path:str ) -> str:
 
 def parse_user_args() -> argparse.ArgumentParser:
     # ------------------------ Arguments -----------------------
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser( add_help = False )
+
+    parser.add_argument(
+        '-h'
+        , '--help'
+        , default   = False
+        , action    = 'store_true'
+        , help      = 'Show this message and exit'
+    )
 
     parser.add_argument( 
         '-o'
