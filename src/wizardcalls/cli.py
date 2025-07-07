@@ -161,10 +161,11 @@ def main():
             syscalls += [ syscall ]
 
     # Print banner & config
-    args_dict = vars( args )
-    for arg in [ 'syscalls', 'file' ]:
-        del args_dict[ arg ]
-    print_dict_table(args_dict)
+    if not args.quiet:
+        args_dict = vars( args )
+        for arg in [ 'syscalls', 'file' ]:
+            del args_dict[ arg ]
+        print_dict_table(args_dict)
 
     # Print syscall import information
     wc_print( f"Imported { len( syscalls ) } system calls" )

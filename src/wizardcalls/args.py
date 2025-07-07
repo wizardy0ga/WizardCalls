@@ -34,6 +34,14 @@ def parse_user_args() -> argparse.ArgumentParser:
         , help      = 'Show the version & exit.'
     )
 
+    parser.add_argument(
+        '-q'
+        , '--quiet'
+        , action    = 'store_true'
+        , default   = False
+        , help      = 'Suppress the banner & config output when building the source code.'
+    )
+
     parser.add_argument( 
         '-o'
         , '--outdir'
