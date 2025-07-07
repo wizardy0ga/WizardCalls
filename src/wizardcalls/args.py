@@ -103,7 +103,8 @@ def parse_user_args() -> argparse.ArgumentParser:
     # ------------------ API Call Inputs -------------------
     input_arg_group = parser.add_mutually_exclusive_group()
     input_arg_group.add_argument(
-        '--apicalls'
+        '-sc'
+        , '--syscalls'
         , type      = str
         , nargs     = "+"
         , help      = 'List of win32 native api calls to generate the template for.'

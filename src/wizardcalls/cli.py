@@ -143,11 +143,11 @@ def main():
     # Import API calls from user
     syscalls             = [ "NtAllocateVirtualMemory" ]
     user_syscall_import  = None
-    if not args.file and not args.apicalls:
-        wc_print('No api calls were given to the script. Specify a list of functions with --file or --apicalls. Use -h for further information')
+    if not args.file and not args.syscalls:
+        wc_print('No api calls were given to the script. Specify a list of functions with --file or --syscalls. Use -h for further information')
         exit()
-    if args.apicalls:
-        user_syscall_import = args.apicalls
+    if args.syscalls:
+        user_syscall_import = args.syscalls
     else:
         with open( args.file, 'r' ) as file:
             user_syscall_import = file.read().split( '\n' ) 
@@ -162,7 +162,7 @@ def main():
 
     # Print banner & config
     args_dict = vars( args )
-    for arg in [ 'apicalls', 'file' ]:
+    for arg in [ 'syscalls', 'file' ]:
         del args_dict[ arg ]
     print_dict_table(args_dict)
 
