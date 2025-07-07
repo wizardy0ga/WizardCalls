@@ -61,35 +61,40 @@ def parse_user_args() -> argparse.ArgumentParser:
     )
     
     build_opt_group.add_argument(
-        '--debug'
+        '-d'
+        , '--debug'
         , action    = 'store_true'
         , default   = False
         , help      = 'Enables debug mode in the header file.' 
     )
     
     build_opt_group.add_argument( 
-        '--random_syscall_addr'
+        '-r'
+        , '--random_syscall_addr'
         , action    = 'store_true'
         , default   = False
         , help      = 'Use random syscall instructions when performing indirect jump. Obfuscates the callstack a bit.'
     )
 
     build_opt_group.add_argument(
-        '--globals'
+        '-g'
+        , '--globals'
         , action    = 'store_true'
         , default   = False
         , help      = 'Enable the use of global variables. Code will no longer be position independent.'
     )
 
     build_opt_group.add_argument(
-        '--remove_comments'
+        '-rm'
+        , '--remove_comments'
         , action    = 'store_true'
         , default   = False
         , help      = 'Remove comments from the source code.'
     )
     
     build_opt_group.add_argument(
-        '--syscall_list_name'
+        '-n'
+        , '--syscall_list_name'
         , type      = str
         , default   = 'pSyscallList'
         , help      = 'Set the name of the PSYSCALL_LIST variable, to be used throughout the code.'
@@ -105,7 +110,8 @@ def parse_user_args() -> argparse.ArgumentParser:
     )
     
     input_arg_group.add_argument(
-        '--file'
+        '-f'
+        , '--file'
         , type    = file_exists
         , default = False
         , help    = 'Path to file containing a list of api calls. Use a new line [\\n] to seperate each api call.' 
