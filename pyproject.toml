@@ -1,0 +1,39 @@
+# https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
+# https://hatch.pypa.io/1.9/config/build/
+
+# Define the build system
+[build-system]
+requires        = ["hatchling"]
+build-backend   = "hatchling.build"
+
+# Set module metadata
+[project]
+name        = "wizardcalls"
+readme      = "README.md"
+version     = "2.0.0"
+description = "An indirect syscall code generation utility for C/C++ windows impants"
+author      = [ 
+    {name="wizardy0ga"} 
+]
+requires-python = ">=3.10"
+# Create 'wizardcalls' command pointing at main function
+[project.scripts]
+wizardcalls = "wizardcalls.cli:main"
+
+# Define files to include in the wheel & source distributions. These are the final files
+# to be included in the code base.
+[tool.hatch.build]
+sources = [
+    "src"   # Must define sources as array with prefix to remove from include paths otherwise incur import crashes due to path issues
+]
+
+include = [ 
+    "src/wizardcalls/*.py",
+    "src/wizardcalls/rsrc/data/*",
+    "src/wizardcalls/rsrc/code/templates/*",
+    "src/wizardcalls/rsrc/code/solution file/src/*",
+    "src/wizardcalls/rsrc/code/solution file/proj/wizardcalls.*",
+    "src/wizardcalls/rsrc/code/solution file/.editorconfig",
+    "src/wizardcalls/rsrc/code/solution file/wizardcalls.sln",
+    "src/wizardcalls/README.md"
+]

@@ -47,7 +47,7 @@
 # define WzDFreeVirtualMemory( ProcessHandle, BaseAddress, RegionSize, FreeTypeThis ) \
 	NtFreeVirtualMemory( SYSCALL_LIST_NAME, ProcessHandle, BaseAddress, RegionSize, FreeTypeThis )
 
-# define WzDCreateThread( ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList ) \
+# define WzDCreateThreadEx( ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList ) \
 	NtCreateThreadEx( SYSCALL_LIST_NAME, ThreadHandle, DesiredAccess, ObjectAttributes, ProcessHandle, StartRoutine, Argument, CreateFlags, ZeroBits, StackSize, MaximumStackSize, AttributeList )
 
 # define WzDWaitForSingleObject(Handle, Alertable, Timeout) \

