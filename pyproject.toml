@@ -12,7 +12,7 @@ name        = "wizardcalls"
 readme      = "README.md"
 version     = "2.0.0"
 description = "An indirect syscall code generation utility for C/C++ windows impants"
-author      = [ 
+authors      = [ 
     {name="wizardy0ga"} 
 ]
 requires-python = ">=3.10"
@@ -23,17 +23,4 @@ wizardcalls = "wizardcalls.cli:main"
 # Define files to include in the wheel & source distributions. These are the final files
 # to be included in the code base.
 [tool.hatch.build]
-sources = [
-    "src"   # Must define sources as array with prefix to remove from include paths otherwise incur import crashes due to path issues
-]
-
-include = [ 
-    "src/wizardcalls/*.py",
-    "src/wizardcalls/rsrc/data/*",
-    "src/wizardcalls/rsrc/code/templates/*",
-    "src/wizardcalls/rsrc/code/solution file/src/*",
-    "src/wizardcalls/rsrc/code/solution file/proj/wizardcalls.*",
-    "src/wizardcalls/rsrc/code/solution file/.editorconfig",
-    "src/wizardcalls/rsrc/code/solution file/wizardcalls.sln",
-    "src/wizardcalls/README.md"
-]
+sources = ["src"]
