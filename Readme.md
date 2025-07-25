@@ -27,24 +27,24 @@ Feel free to open an issue for an issue for things like bugs & feature requests.
 
 ## Documentation
 ### Module
-[Using wizardcalls from the command line](/wizardcalls/docs/en/usage/command%20line.md)  
-[Using wizardcalls in a script](/wizardcalls/docs/en/usage/scripting.md)
+[Using wizardcalls from the command line](docs/en/usage/command%20line.md)  
+[Using wizardcalls in a script](docs/en/usage/scripting.md)
 ### Template
-[Using the wizardcalls source code in your implant](/wizardcalls/docs/en/usage/template.md)
+[Using the wizardcalls source code in your implant](docs/en/usage/template.md)
 ### Tutorials
-[Writing an injector with wizardcalls](/wizardcalls/docs/en/tutorials/Writing-an-injector-with-wizardcalls.md)  
-[Writing a compilation script for the injector with wizardcalls](/wizardcalls/docs/en/tutorials/Writing-a-compilation-script-for-the-injector-with-wizardcalls.md)
+[Writing an injector with wizardcalls](docs/en/tutorials/Writing-an-injector-with-wizardcalls.md)  
+[Writing a compilation script for the injector with wizardcalls](docs/en/tutorials/Writing-a-compilation-script-for-the-injector-with-wizardcalls.md)
 
 ## Basic Usage
 This section describes how wizardcalls can be used by developers. Wizardcalls offers two interfaces for developer usage, in a script & on the command line. The sections below provide a brief overview of both interfaces. See the linked documentation above for more inforamtion.
 
 ### Command Line
-After installation, developers can interact with wizardcalls from the commandline via the **wizardcalls** command. The image below shows the current options available for building the template. Wizardcalls only requires the **--syscalls** argument for usage. See the [command line documentation](/wizardcalls/docs/en/usage/command%20line.md) for more information.
+After installation, developers can interact with wizardcalls from the commandline via the **wizardcalls** command. The image below shows the current options available for building the template. Wizardcalls only requires the **--syscalls** argument for usage. See the [command line documentation](docs/en/usage/command%20line.md) for more information.
 
-![help output](/wizardcalls/docs/img/help-output.png)
+![help output](docs/img/help-output.png)
 
 ### Scripting
-Hashycalls offers an interface for developers to automate their implant's build routine via the **WizardCalls** object. More information can be found in the [scipting](/wizardcalls/docs/en/usage/scripting.md) documentation.
+Hashycalls offers an interface for developers to automate their implant's build routine via the **WizardCalls** object. More information can be found in the [scipting](docs/en/usage/scripting.md) documentation.
 
 ```py
 WizardCalls(

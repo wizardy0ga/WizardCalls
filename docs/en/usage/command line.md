@@ -1,7 +1,7 @@
 # Using wizardcalls from the command line
 Wizardcalls provides the option to generate templates from the command line. This documentation describes the various command line options available for developers.
 
-![help-output](/wizardcalls/docs/img/help-output.png)
+![help-output](../../img/help-output.png)
 
 ## Command Line Options
 The table below provides extended inforamtion about important command line options.
