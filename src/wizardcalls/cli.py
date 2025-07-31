@@ -149,7 +149,7 @@ def main():
         syscalls             = [ "NtAllocateVirtualMemory" ]
         user_syscall_import  = None
         if not args.file and not args.syscalls:
-            wc_print('No api calls were given to the script. Specify a list of functions with --file or --syscalls. Use -h for further information')
+            wc_print('No syscalls were given to the script. Specify a list of functions with --file or --syscalls. Use -h for further information')
             exit()
         if args.syscalls:
             user_syscall_import = args.syscalls
