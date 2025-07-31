@@ -19,7 +19,7 @@ The WizardCalls object contains 3 properties, each representing a source code fi
 | - | - |
 | header | Represents the wizardcalls header file (wizardcalls.h)
 | source | Represents the wizardcalls source file (wizardcalls.c)
-| asm | Represents the assembly file used by wizardcalls (wizardcalls.x64.asm)
+| asm_source | Represents the assembly file used by wizardcalls (wizardcalls.x64.asm)
 
 ### Object Initialization Parameters
 #### Globals (bool)
@@ -127,8 +127,8 @@ def compile( wizardsource: WizardCalls, compiler_args: list, linker_args: list )
 call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat"
 cd "{ temp_dir }"
 ml64.exe /c /Fo wizardcalls.x64.obj "{ wizardsource.asm_source.filename }"
-cl main.c { wizardsource.source.filename } wizardcalls.x64.obj { ' '.join(compiler_args) }
-link.exe main.obj wizardcalls.obj wizardcalls.x64.obj { ' '.join(linker_args) }
+cl main.c { wizardsource.source.filename } wizardcalls.x64.obj /O2
+link.exe main.obj wizardcalls.obj wizardcalls.x64.obj
 """
     # Write source code to directory
     os.makedirs( temp_dir, exist_ok = True )
