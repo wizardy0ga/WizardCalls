@@ -16,10 +16,13 @@ ASM          = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rs
 HEADER       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'include', 'wizardcalls.h' )
 SOURCE       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'source' , 'wizardcalls.c' )
 DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Djb2.c' )
+TYPE_LOOKUP  = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'data', 'type-conversion.json' )
 
-# --------------------- Import NT API Data ----------------------
+# --------------------- Import Data ----------------------
 with open( NT_DATA, 'r' ) as file:
     nt_api_data = json.loads( file.read() )
+with open( TYPE_LOOKUP, 'r' ) as file:
+    type_lookup = json.loads( file.read() )
 
 # --------------------------- Classes ---------------------------
 class Syscall( object ):
@@ -30,6 +33,10 @@ class Syscall( object ):
             raise Exception( f"{ RED }{ name }{ END } is not a valid syscall in { os.path.join( os.getcwd(), NT_DATA ) }" )
         
         self.data           = nt_api_data[ name ]
+        # Cleanup function parameters to prevent invalid data types from appearing in source code (breaks compilation)
+        for param in self.data['arguments']:
+            if param['type'] in type_lookup.keys():
+                param['type'] = type_lookup[param['type']]
         self.syscall_name   = name
         self.is_global      = _global
         self.wzd_macro      = self.create_macro()
