@@ -2,6 +2,7 @@ import random
 import subprocess
 import os
 import shutil
+from pytest import fail
 from wizardcalls import WizardCalls
 
 NO_SHOW_COMPILATION_OUTPUT  = True # When true, hide stdout from compilation process
@@ -59,24 +60,24 @@ def build( hash_algo: str, globals: bool, randomize_jump_address: bool, compiler
 def test_hashing_functions():
     for algo in [ 'sdbm', 'djb2' ]:
         if not build( hash_algo = algo, globals = False, randomize_jump_address = False ):
-            print( f"Failed on { algo } hashing algo test" )
+            fail( f"Failed on { algo } hashing algo test" )
         else:
             print( f"Passed { algo } hashing algo test" )
 
 def test_globals():
     if not build( hash_algo = 'sdbm', globals = True, randomize_jump_address = False, compiler_args = ['/O2'] ):
-        print( "Failed on globals test" )
+        fail( "Failed on globals test" )
     else:
         print( "Passed globals test" )
 
 def test_position_independence():
     if not build( hash_algo = 'sdbm', globals = False, randomize_jump_address = False ):
-        print( "Failed on position independence test" )
+        fail( "Failed on position independence test" )
     else:
         print ("Passed position indenpendence test" )
 
 def test_jump_address_randomization():
     if not build( hash_algo = 'sdbm', globals = False, randomize_jump_address = True):
-        print( "Failed jump address randomization test" )
+        fail( "Failed jump address randomization test" )
     else:
         print( "Passed jump address randomization test" )
