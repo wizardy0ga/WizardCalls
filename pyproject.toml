@@ -10,7 +10,7 @@ build-backend   = "hatchling.build"
 [project]
 name        = "wizardcalls"
 readme      = "Readme.md"
-version     = "2.0.1"
+version     = "2.1.0"
 description = "An indirect syscall code generation utility for C/C++ windows impants"
 authors      = [ 
     {name="wizardy0ga"} 
