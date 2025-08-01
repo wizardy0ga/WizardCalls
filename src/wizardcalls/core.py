@@ -16,6 +16,7 @@ ASM          = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rs
 HEADER       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'include', 'wizardcalls.h' )
 SOURCE       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'source' , 'wizardcalls.c' )
 DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Djb2.c' )
+JENKINS      = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Jenkins.c' )
 TYPE_LOOKUP  = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'data', 'type-conversion.json' )
 
 # --------------------- Import Data ----------------------
@@ -210,6 +211,10 @@ class WizardCallsSource( WizardCallsFile ):
                 self.hash_algo          = self.hash_djb2
                 self.hash_function      = 'HashStringDjb2'
                 self.hash_function_code = DJB2
+            case 'jenkins':
+                self.hash_algo          = self.hash_jenkins
+                self.hash_function      = 'HashStringJenkinsOneAtATime'
+                self.hash_function_code = JENKINS
             case _:
                 raise Exception( f"{ hash_algo } is not a hashing algorithm currently implemented in wizard calls." )
 
@@ -303,7 +308,18 @@ class WizardCallsSource( WizardCallsFile ):
         for x in list( string ):
             Hash = ord( x ) + ( Hash << 6 ) + ( Hash << 16 ) - Hash
         return "0x%X" % ( Hash & 0xFFFFFFFF )
-        
+    
+    def hash_jenkins( self, string: str) -> str:
+        Hash = self.hash_seed
+        for c in string: 
+            Hash += ord(c)
+            Hash = (Hash + (Hash << 10)) & 0xFFFFFFFF
+            Hash ^= (Hash >> 6)
+        Hash = (Hash + (Hash << 3)) & 0xFFFFFFFF
+        Hash ^= (Hash >> 11)
+        Hash = (Hash + (Hash << 15)) & 0xFFFFFFFF
+        return "0x%X" % ( Hash & 0xFFFFFFFF )
+
 class WizardCallsHeader( WizardCallsFile ):
     """ Represents the header file for wizardcalls """
     def __init__( self, globals: bool,  syscalls: list, syscall_list_name:str ):
