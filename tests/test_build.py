@@ -58,7 +58,7 @@ def build( hash_algo: str, globals: bool, randomize_jump_address: bool, compiler
     return True
 
 def test_hashing_functions():
-    for algo in [ 'sdbm', 'djb2', 'jenkins' ]:
+    for algo in [ 'sdbm', 'djb2', 'jenkins', 'murmur' ]:
         if not build( hash_algo = algo, globals = False, randomize_jump_address = False ):
             fail( f"Failed on { algo } hashing algo test" )
         else:
