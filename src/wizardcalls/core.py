@@ -6,7 +6,7 @@ from wizardcalls.colors import *
 
 
 # -------------------------- Constants --------------------------
-SCRIPT_VERSION      = "2.0.1"
+SCRIPT_VERSION      = "2.1.0"
 TEMPLATE_VERSION    = "2.0.0"
 
 
