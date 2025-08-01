@@ -100,7 +100,7 @@ def print_banner( spacing: int ) -> None:
     print( f"║{ RED }{ 'jmp 0x0F05'.center( spacing + 4, ' ' ) }{ GREEN }║")
     print( f"║{ ' ' * ( spacing + 4 ) }║")
     print( f"║{ f"By:{ WHITE } wizardy0ga".center( spacing + 11 ) }{ GREEN }║")
-    print( f"║{ f"Module Version:  { CYAN }{ SCRIPT_VERSION }".center( spacing + 11 ) }{ GREEN }║")
+    print( f"║{ f" Module Version:  { CYAN }{ SCRIPT_VERSION }".center( spacing + 11 ) }{ GREEN }║")
     print( f"║{ f"Template Version: { CYAN }{ TEMPLATE_VERSION }".center( spacing + 11 ) }{ GREEN }║")
 
 
