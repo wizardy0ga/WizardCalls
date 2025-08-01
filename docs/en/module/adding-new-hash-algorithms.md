@@ -1,4 +1,4 @@
-# Adding new hashes to the module
+# Adding new hash algorithms to the module
 This document describes how new hashes are added to the the wizardcalls module. In this example, we'll be adding support for the [Jenkins One At A Time Hashing algorithm](https://github.com/vxunderground/VX-API/blob/main/VX-API/HashStringJenkinsOneAtATime32Bit.cpp) from the [VX-API](https://github.com/vxunderground/VX-API/).
 
 ## Step 1; Choose a name for the algorithm
