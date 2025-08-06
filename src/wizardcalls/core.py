@@ -6,7 +6,7 @@ from wizardcalls.colors import *
 
 
 # -------------------------- Constants --------------------------
-SCRIPT_VERSION      = "2.0.1"
+SCRIPT_VERSION      = "2.1.0"
 TEMPLATE_VERSION    = "2.0.0"
 
 
@@ -16,6 +16,8 @@ ASM          = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rs
 HEADER       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'include', 'wizardcalls.h' )
 SOURCE       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'solution file', 'src', 'source' , 'wizardcalls.c' )
 DJB2         = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Djb2.c' )
+JENKINS      = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Jenkins.c' )
+MURMUR       = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'code', 'templates', 'Murmur.c' ) 
 TYPE_LOOKUP  = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'rsrc', 'data', 'type-conversion.json' )
 
 # --------------------- Import Data ----------------------
@@ -210,6 +212,14 @@ class WizardCallsSource( WizardCallsFile ):
                 self.hash_algo          = self.hash_djb2
                 self.hash_function      = 'HashStringDjb2'
                 self.hash_function_code = DJB2
+            case 'jenkins':
+                self.hash_algo          = self.hash_jenkins
+                self.hash_function      = 'HashStringJenkinsOneAtATime'
+                self.hash_function_code = JENKINS
+            case 'murmur':
+                self.hash_algo          = self.hash_murmur
+                self.hash_function      = 'HashStringMurmur'
+                self.hash_function_code = MURMUR
             case _:
                 raise Exception( f"{ hash_algo } is not a hashing algorithm currently implemented in wizard calls." )
 
@@ -303,7 +313,55 @@ class WizardCallsSource( WizardCallsFile ):
         for x in list( string ):
             Hash = ord( x ) + ( Hash << 6 ) + ( Hash << 16 ) - Hash
         return "0x%X" % ( Hash & 0xFFFFFFFF )
-        
+    
+    def hash_jenkins( self, string: str) -> str:
+        """ Hash a string with the Jenkins One At A Time algo """
+        Hash = self.hash_seed
+        for c in string: 
+            Hash += ord(c)
+            Hash = (Hash + (Hash << 10)) & 0xFFFFFFFF
+            Hash ^= (Hash >> 6)
+        Hash = (Hash + (Hash << 3)) & 0xFFFFFFFF
+        Hash ^= (Hash >> 11)
+        Hash = (Hash + (Hash << 15)) & 0xFFFFFFFF
+        return "0x%X" % ( Hash & 0xFFFFFFFF )
+    
+    def hash_murmur( self, string: str ) -> str:
+        """ Hash a string with MurmurHash3 algo """
+        string = string.encode()
+        length = len(string)
+        Hash = self.hash_seed
+        if length > 3:
+            idx = length >> 2
+            for i in range(idx):
+                start = i * 4
+                cnt = int.from_bytes(string[start:start+4], byteorder='little')
+                cnt = (cnt * 0xcc9e2d51) & 0xffffffff
+                cnt = ((cnt << 15) | (cnt >> 17)) & 0xffffffff
+                cnt = (cnt * 0x1b873593) & 0xffffffff
+                Hash ^= cnt
+                Hash = ((Hash << 13) | (Hash >> 19)) & 0xffffffff
+                Hash = ((Hash * 5) + 0xe6546b64) & 0xffffffff
+        remaining = length & 3
+        if remaining:
+            cnt = 0
+            start_pos = (length >> 2) * 4 + remaining - 1
+            for i in range(remaining):
+                cnt = (cnt << 8) & 0xffffffff
+                cnt |= string[start_pos - i]
+            cnt = (cnt * 0xcc9e2d51) & 0xffffffff
+            cnt = ((cnt << 15) | (cnt >> 17)) & 0xffffffff
+            cnt = (cnt * 0x1b873593) & 0xffffffff
+            Hash ^= cnt
+        Hash ^= length
+        Hash ^= Hash >> 16
+        Hash = (Hash * 0x85ebca6b) & 0xffffffff
+        Hash ^= Hash >> 13
+        Hash = (Hash * 0xc2b2ae35) & 0xffffffff
+        Hash ^= Hash >> 16
+        return "0x%X" % Hash
+    
+
 class WizardCallsHeader( WizardCallsFile ):
     """ Represents the header file for wizardcalls """
     def __init__( self, globals: bool,  syscalls: list, syscall_list_name:str ):

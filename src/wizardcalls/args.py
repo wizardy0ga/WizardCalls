@@ -63,7 +63,7 @@ def parse_user_args() -> argparse.ArgumentParser:
     build_opt_group.add_argument(
         '-a'
         , '--algo'
-        , choices   = [ 'sdbm', 'djb2' ]
+        , choices   = [ 'sdbm', 'djb2', 'jenkins', 'murmur' ]
         , default   = 'sdbm'
         , help      = 'An algorithm to hash the syscalls with. Defaults to sdbm.'
     )
