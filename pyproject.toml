@@ -20,6 +20,11 @@ requires-python = ">=3.10"
 [project.scripts]
 wizardcalls = "wizardcalls.cli:main"
 
+[project.urls]
+Github          = "https://github.com/wizardy0ga/wizardcalls"
+Source          = "https://github.com/wizardy0ga/wizardcalls/tree/master/src/wizardcalls"
+Documentation   = "https://github.com/wizardy0ga/wizardcalls/tree/master/docs/en"
+
 # Define files to include in the wheel & source distributions. These are the final files
 # to be included in the code base.
 [tool.hatch.build]
